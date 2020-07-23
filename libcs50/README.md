@@ -5,7 +5,7 @@ These modules support the TSE project.  Feel free to drop in your implementation
 ## Usage
 
 To build `libcs50.a`, run `make`. 
-The starter kit includes a pre-built library, `libcs50-given.a`, in case you prefer to use our Lab3 solutions rather than your own.
+The starter kit includes a pre-built library, `libcs50-given.a`, in case you prefer to use our Lab3 solutions rather than your own. This library is compiled on CS servers, so you should also use it on CS servers. 
 
 If you prefer our data-structure implementation over your own, modify the Makefile to replace the rule for `$(LIB)`:
 
