@@ -1,0 +1,3819 @@
+switchml () {  typeset swfound=1;
+ if [ "${MODULES_USE_COMPAT_VERSION:-0}" = '1' ]; then
+ typeset swname='main';
+ if [ -e /usr/share/Modules/libexec/modulecmd.tcl ]; then
+ typeset swfound=0;
+ unset MODULES_USE_COMPAT_VERSION;
+ fi;
+ else
+ typeset swname='compatibility';
+ if [ -e /usr/share/Modules/libexec/modulecmd-compat ]; then
+ typeset swfound=0;
+ MODULES_USE_COMPAT_VERSION=1;
+ export MODULES_USE_COMPAT_VERSION;
+ fi;
+ fi;
+ if [ $swfound -eq 0 ]; then
+ echo "Switching to Modules $swname version";
+ source /usr/share/Modules/init/bash;
+ else
+ echo "Cannot switch to Modules $swname version, command not found";
+ return 1;
+ fi
+}
+module () {  unset _mlshdbg;
+ if [ "${MODULES_SILENT_SHELL_DEBUG:-0}" = '1' ]; then
+ case "$-" in 
+ *v*x*)
+ set +vx;
+ _mlshdbg='vx'
+ ;;
+ *v*)
+ set +v;
+ _mlshdbg='v'
+ ;;
+ *x*)
+ set +x;
+ _mlshdbg='x'
+ ;;
+ *)
+ _mlshdbg=''
+ ;;
+ esac;
+ fi;
+ unset _mlre _mlIFS;
+ if [ -n "${IFS+x}" ]; then
+ _mlIFS=$IFS;
+ fi;
+ IFS=' ';
+ for _mlv in ${MODULES_RUN_QUARANTINE:-};
+ do
+ if [ "${_mlv}" = "${_mlv##*[!A-Za-z0-9_]}" -a "${_mlv}" = "${_mlv#[0-9]}" ]; then
+ if [ -n "`eval 'echo ${'$_mlv'+x}'`" ]; then
+ _mlre="${_mlre:-}${_mlv}_modquar='`eval 'echo ${'$_mlv'}'`' ";
+ fi;
+ _mlrv="MODULES_RUNENV_${_mlv}";
+ _mlre="${_mlre:-}${_mlv}='`eval 'echo ${'$_mlrv':-}'`' ";
+ fi;
+ done;
+ if [ -n "${_mlre:-}" ]; then
+ eval `eval ${_mlre}/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash '"$@"'`;
+ else
+ eval `/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash "$@"`;
+ fi;
+ _mlstatus=$?;
+ if [ -n "${_mlIFS+x}" ]; then
+ IFS=$_mlIFS;
+ else
+ unset IFS;
+ fi;
+ unset _mlre _mlv _mlrv _mlIFS;
+ if [ -n "${_mlshdbg:-}" ]; then
+ set -$_mlshdbg;
+ fi;
+ unset _mlshdbg;
+ return $_mlstatus
+}
+#!/bin/bash 
+# testing.sh for crawler.c
+#
+# tests multiple error and working cases for crawler
+#
+# Jordan Sanz
+# CS50
+#
+
+# set-up: make testing directories to hold pagesaver output
+mkdir test1
+mkdir: cannot create directory ‘test1’: File exists
+mkdir test3
+mkdir: cannot create directory ‘test3’: File exists
+mkdir test4
+mkdir: cannot create directory ‘test4’: File exists
+mkdir test5
+mkdir: cannot create directory ‘test5’: File exists
+mkdir test6
+mkdir: cannot create directory ‘test6’: File exists
+mkdir test7
+mkdir: cannot create directory ‘test7’: File exists
+mkdir test8
+mkdir: cannot create directory ‘test8’: File exists
+mkdir test9
+mkdir: cannot create directory ‘test9’: File exists
+
+# test 0: incorrect command line arguments
+echo "Testing incorrect amount of line arguments"
+Testing incorrect amount of line arguments
+./crawler
+Wrong amount of parameters provided. 
+./crawler one
+Wrong amount of parameters provided. 
+./crawler one two
+Wrong amount of parameters provided. 
+
+# test 1: seedURL points to non-existant server
+echo "Testing when seedURL points to non-existant server"
+Testing when seedURL points to non-existant server
+./crawler hello.hellohellohello test1 0
+URL is not internal. 
+
+# test 2: directory is non-existant
+echo "Testing when directory is non-existant"
+Testing when directory is non-existant
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html notdirectory 0
+Directory does not exist.
+
+# test 3: maxDepth is out of bounds
+echo "Testing when max depth is out of bounds"
+Testing when max depth is out of bounds
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test3 -1
+Max Depth is out of bounds. Please use a number between 0 and 10. 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test3 11
+Max Depth is out of bounds. Please use a number between 0 and 10. 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test3 notnumber
+Max Depth is not a number.
+# test 4: seedURL points to non-internal server
+echo "Testing when seedURL points to non-internal server"
+Testing when seedURL points to non-internal server
+./crawler http://www.jordansanz.me test4 0
+URL is not internal. 
+
+# test 5: seedURL points to valid server but non-existant page
+echo "Testing crawler when seedURL points to valid server but non-existant page"
+Testing crawler when seedURL points to valid server but non-existant page
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.blah test5 0
+URL is not internal. 
+
+# test 6: crawl simple, closed set of web-pages
+echo "Testing crawler on simple, closed set of webpages"
+Testing crawler on simple, closed set of webpages
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 0
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 2
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 3
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 4
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test6 5
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+
+
+# test 7: repeat tests 4 and 5 with different seed page in same site
+echo "Testing crawler with same site but different seed page"
+Testing crawler with same site but different seed page
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 0
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 2
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Page html for url http://old-www.cs.dartmouth.edu/~xia/& could not be extracted. 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 3
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Page html for url http://old-www.cs.dartmouth.edu/~xia/& could not be extracted. 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 4
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Page html for url http://old-www.cs.dartmouth.edu/~xia/& could not be extracted. 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html test7 5
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Page html for url http://old-www.cs.dartmouth.edu/~xia/& could not be extracted. 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+
+
+# test 8: point crawler at wikipedia playground with depths 0, 1, 2
+echo "Testing crawler with wikipedia playground with depths 0, 1, 2"
+Testing crawler with wikipedia playground with depths 0, 1, 2
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html test8 0
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html test8 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html test8 2
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+Beginning to crawl webpage 9 
+Finished with webpage 10 
+Beginning to crawl webpage 10 
+Finished with webpage 11 
+Beginning to crawl webpage 11 
+Finished with webpage 12 
+Beginning to crawl webpage 12 
+Finished with webpage 13 
+Beginning to crawl webpage 13 
+Finished with webpage 14 
+Beginning to crawl webpage 14 
+Finished with webpage 15 
+Beginning to crawl webpage 15 
+Finished with webpage 16 
+Beginning to crawl webpage 16 
+Finished with webpage 17 
+Beginning to crawl webpage 17 
+Finished with webpage 18 
+Beginning to crawl webpage 18 
+Finished with webpage 19 
+Beginning to crawl webpage 19 
+Finished with webpage 20 
+Beginning to crawl webpage 20 
+Finished with webpage 21 
+Beginning to crawl webpage 21 
+Finished with webpage 22 
+Beginning to crawl webpage 22 
+Finished with webpage 23 
+Beginning to crawl webpage 23 
+Finished with webpage 24 
+Beginning to crawl webpage 24 
+Finished with webpage 25 
+Beginning to crawl webpage 25 
+Finished with webpage 26 
+Beginning to crawl webpage 26 
+Finished with webpage 27 
+Beginning to crawl webpage 27 
+Finished with webpage 28 
+Beginning to crawl webpage 28 
+Finished with webpage 29 
+Beginning to crawl webpage 29 
+Finished with webpage 30 
+Beginning to crawl webpage 30 
+Finished with webpage 31 
+Beginning to crawl webpage 31 
+Finished with webpage 32 
+Beginning to crawl webpage 32 
+Finished with webpage 33 
+Beginning to crawl webpage 33 
+Finished with webpage 34 
+Beginning to crawl webpage 34 
+Finished with webpage 35 
+Beginning to crawl webpage 35 
+Finished with webpage 36 
+Beginning to crawl webpage 36 
+Finished with webpage 37 
+Beginning to crawl webpage 37 
+Finished with webpage 38 
+Beginning to crawl webpage 38 
+Finished with webpage 39 
+Beginning to crawl webpage 39 
+Finished with webpage 40 
+Beginning to crawl webpage 40 
+Finished with webpage 41 
+Beginning to crawl webpage 41 
+Finished with webpage 42 
+Beginning to crawl webpage 42 
+Finished with webpage 43 
+Beginning to crawl webpage 43 
+Finished with webpage 44 
+Beginning to crawl webpage 44 
+Finished with webpage 45 
+Beginning to crawl webpage 45 
+Finished with webpage 46 
+Beginning to crawl webpage 46 
+Finished with webpage 47 
+Beginning to crawl webpage 47 
+Finished with webpage 48 
+Beginning to crawl webpage 48 
+Finished with webpage 49 
+Beginning to crawl webpage 49 
+Finished with webpage 50 
+Beginning to crawl webpage 50 
+Finished with webpage 51 
+Beginning to crawl webpage 51 
+Finished with webpage 52 
+Beginning to crawl webpage 52 
+Finished with webpage 53 
+Beginning to crawl webpage 53 
+Finished with webpage 54 
+Beginning to crawl webpage 54 
+Finished with webpage 55 
+Beginning to crawl webpage 55 
+Finished with webpage 56 
+Beginning to crawl webpage 56 
+Finished with webpage 57 
+Beginning to crawl webpage 57 
+Finished with webpage 58 
+Beginning to crawl webpage 58 
+Finished with webpage 59 
+Beginning to crawl webpage 59 
+Finished with webpage 60 
+Beginning to crawl webpage 60 
+Finished with webpage 61 
+Beginning to crawl webpage 61 
+Finished with webpage 62 
+Beginning to crawl webpage 62 
+Finished with webpage 63 
+Beginning to crawl webpage 63 
+Finished with webpage 64 
+Beginning to crawl webpage 64 
+Finished with webpage 65 
+Beginning to crawl webpage 65 
+Finished with webpage 66 
+Beginning to crawl webpage 66 
+Finished with webpage 67 
+Beginning to crawl webpage 67 
+Finished with webpage 68 
+Beginning to crawl webpage 68 
+Finished with webpage 69 
+Beginning to crawl webpage 69 
+Finished with webpage 70 
+Beginning to crawl webpage 70 
+Finished with webpage 71 
+Beginning to crawl webpage 71 
+Finished with webpage 72 
+Beginning to crawl webpage 72 
+Finished with webpage 73 
+Beginning to crawl webpage 73 
+Finished with webpage 74 
+Beginning to crawl webpage 74 
+Finished with webpage 75 
+Beginning to crawl webpage 75 
+Finished with webpage 76 
+Beginning to crawl webpage 76 
+Finished with webpage 77 
+Beginning to crawl webpage 77 
+Finished with webpage 78 
+Beginning to crawl webpage 78 
+Finished with webpage 79 
+Beginning to crawl webpage 79 
+Finished with webpage 80 
+Beginning to crawl webpage 80 
+Finished with webpage 81 
+Beginning to crawl webpage 81 
+Finished with webpage 82 
+Beginning to crawl webpage 82 
+Finished with webpage 83 
+Beginning to crawl webpage 83 
+Finished with webpage 84 
+Beginning to crawl webpage 84 
+Finished with webpage 85 
+Beginning to crawl webpage 85 
+Finished with webpage 86 
+Beginning to crawl webpage 86 
+Finished with webpage 87 
+Beginning to crawl webpage 87 
+Finished with webpage 88 
+Beginning to crawl webpage 88 
+Finished with webpage 89 
+Beginning to crawl webpage 89 
+Finished with webpage 90 
+Beginning to crawl webpage 90 
+Finished with webpage 91 
+Beginning to crawl webpage 91 
+Finished with webpage 92 
+Beginning to crawl webpage 92 
+Finished with webpage 93 
+Beginning to crawl webpage 93 
+Finished with webpage 94 
+Beginning to crawl webpage 94 
+Finished with webpage 95 
+Beginning to crawl webpage 95 
+Finished with webpage 96 
+Beginning to crawl webpage 96 
+Finished with webpage 97 
+Beginning to crawl webpage 97 
+Finished with webpage 98 
+Beginning to crawl webpage 98 
+Finished with webpage 99 
+Beginning to crawl webpage 99 
+Finished with webpage 100 
+Beginning to crawl webpage 100 
+Finished with webpage 101 
+Beginning to crawl webpage 101 
+Finished with webpage 102 
+Beginning to crawl webpage 102 
+Finished with webpage 103 
+Beginning to crawl webpage 103 
+Finished with webpage 104 
+Beginning to crawl webpage 104 
+Finished with webpage 105 
+Beginning to crawl webpage 105 
+Finished with webpage 106 
+Beginning to crawl webpage 106 
+Finished with webpage 107 
+Beginning to crawl webpage 107 
+Finished with webpage 108 
+Beginning to crawl webpage 108 
+Finished with webpage 109 
+Beginning to crawl webpage 109 
+Finished with webpage 110 
+Beginning to crawl webpage 110 
+Finished with webpage 111 
+Beginning to crawl webpage 111 
+Finished with webpage 112 
+Beginning to crawl webpage 112 
+Finished with webpage 113 
+Beginning to crawl webpage 113 
+Finished with webpage 114 
+Beginning to crawl webpage 114 
+Finished with webpage 115 
+Beginning to crawl webpage 115 
+Finished with webpage 116 
+Beginning to crawl webpage 116 
+Finished with webpage 117 
+Beginning to crawl webpage 117 
+Finished with webpage 118 
+Beginning to crawl webpage 118 
+Finished with webpage 119 
+Beginning to crawl webpage 119 
+Finished with webpage 120 
+Beginning to crawl webpage 120 
+Finished with webpage 121 
+Beginning to crawl webpage 121 
+Finished with webpage 122 
+Beginning to crawl webpage 122 
+Finished with webpage 123 
+Beginning to crawl webpage 123 
+Finished with webpage 124 
+Beginning to crawl webpage 124 
+Finished with webpage 125 
+Beginning to crawl webpage 125 
+Finished with webpage 126 
+Beginning to crawl webpage 126 
+Finished with webpage 127 
+Beginning to crawl webpage 127 
+Finished with webpage 128 
+Beginning to crawl webpage 128 
+Finished with webpage 129 
+Beginning to crawl webpage 129 
+Finished with webpage 130 
+Beginning to crawl webpage 130 
+Finished with webpage 131 
+Beginning to crawl webpage 131 
+Finished with webpage 132 
+Beginning to crawl webpage 132 
+Finished with webpage 133 
+Beginning to crawl webpage 133 
+Finished with webpage 134 
+Beginning to crawl webpage 134 
+Finished with webpage 135 
+Beginning to crawl webpage 135 
+Finished with webpage 136 
+Beginning to crawl webpage 136 
+Finished with webpage 137 
+Beginning to crawl webpage 137 
+Finished with webpage 138 
+Beginning to crawl webpage 138 
+Finished with webpage 139 
+Beginning to crawl webpage 139 
+Finished with webpage 140 
+Beginning to crawl webpage 140 
+Finished with webpage 141 
+Beginning to crawl webpage 141 
+Finished with webpage 142 
+Beginning to crawl webpage 142 
+Finished with webpage 143 
+Beginning to crawl webpage 143 
+Finished with webpage 144 
+Beginning to crawl webpage 144 
+Finished with webpage 145 
+Beginning to crawl webpage 145 
+Finished with webpage 146 
+Beginning to crawl webpage 146 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/.html could not be extracted. 
+Beginning to crawl webpage 146 
+Finished with webpage 147 
+Beginning to crawl webpage 147 
+Finished with webpage 148 
+Beginning to crawl webpage 148 
+Finished with webpage 149 
+Beginning to crawl webpage 149 
+Finished with webpage 150 
+Beginning to crawl webpage 150 
+Finished with webpage 151 
+Beginning to crawl webpage 151 
+Finished with webpage 152 
+Beginning to crawl webpage 152 
+Finished with webpage 153 
+Beginning to crawl webpage 153 
+Finished with webpage 154 
+Beginning to crawl webpage 154 
+Finished with webpage 155 
+Beginning to crawl webpage 155 
+Finished with webpage 156 
+Beginning to crawl webpage 156 
+Finished with webpage 157 
+Beginning to crawl webpage 157 
+Finished with webpage 158 
+Beginning to crawl webpage 158 
+Finished with webpage 159 
+Beginning to crawl webpage 159 
+Finished with webpage 160 
+Beginning to crawl webpage 160 
+Finished with webpage 161 
+Beginning to crawl webpage 161 
+Finished with webpage 162 
+Beginning to crawl webpage 162 
+Finished with webpage 163 
+Beginning to crawl webpage 163 
+Finished with webpage 164 
+Beginning to crawl webpage 164 
+Finished with webpage 165 
+Beginning to crawl webpage 165 
+Finished with webpage 166 
+Beginning to crawl webpage 166 
+Finished with webpage 167 
+Beginning to crawl webpage 167 
+Finished with webpage 168 
+Beginning to crawl webpage 168 
+Finished with webpage 169 
+Beginning to crawl webpage 169 
+Finished with webpage 170 
+Beginning to crawl webpage 170 
+Finished with webpage 171 
+Beginning to crawl webpage 171 
+Finished with webpage 172 
+Beginning to crawl webpage 172 
+Finished with webpage 173 
+Beginning to crawl webpage 173 
+Finished with webpage 174 
+Beginning to crawl webpage 174 
+Finished with webpage 175 
+Beginning to crawl webpage 175 
+Finished with webpage 176 
+Beginning to crawl webpage 176 
+Finished with webpage 177 
+Beginning to crawl webpage 177 
+Finished with webpage 178 
+Beginning to crawl webpage 178 
+Finished with webpage 179 
+Beginning to crawl webpage 179 
+Finished with webpage 180 
+Beginning to crawl webpage 180 
+Finished with webpage 181 
+Beginning to crawl webpage 181 
+Finished with webpage 182 
+Beginning to crawl webpage 182 
+Finished with webpage 183 
+Beginning to crawl webpage 183 
+Finished with webpage 184 
+Beginning to crawl webpage 184 
+Finished with webpage 185 
+Beginning to crawl webpage 185 
+Finished with webpage 186 
+Beginning to crawl webpage 186 
+Finished with webpage 187 
+Beginning to crawl webpage 187 
+Finished with webpage 188 
+Beginning to crawl webpage 188 
+Finished with webpage 189 
+Beginning to crawl webpage 189 
+Finished with webpage 190 
+Beginning to crawl webpage 190 
+Finished with webpage 191 
+Beginning to crawl webpage 191 
+Finished with webpage 192 
+Beginning to crawl webpage 192 
+Finished with webpage 193 
+Beginning to crawl webpage 193 
+Finished with webpage 194 
+Beginning to crawl webpage 194 
+Finished with webpage 195 
+Beginning to crawl webpage 195 
+Finished with webpage 196 
+Beginning to crawl webpage 196 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Pearson%27s_chi-squared_test.html could not be extracted. 
+Beginning to crawl webpage 196 
+Finished with webpage 197 
+Beginning to crawl webpage 197 
+Finished with webpage 198 
+Beginning to crawl webpage 198 
+Finished with webpage 199 
+Beginning to crawl webpage 199 
+Finished with webpage 200 
+Beginning to crawl webpage 200 
+Finished with webpage 201 
+Beginning to crawl webpage 201 
+Finished with webpage 202 
+Beginning to crawl webpage 202 
+Finished with webpage 203 
+Beginning to crawl webpage 203 
+Finished with webpage 204 
+Beginning to crawl webpage 204 
+Finished with webpage 205 
+Beginning to crawl webpage 205 
+Finished with webpage 206 
+Beginning to crawl webpage 206 
+Finished with webpage 207 
+Beginning to crawl webpage 207 
+Finished with webpage 208 
+Beginning to crawl webpage 208 
+Finished with webpage 209 
+Beginning to crawl webpage 209 
+Finished with webpage 210 
+Beginning to crawl webpage 210 
+Finished with webpage 211 
+Beginning to crawl webpage 211 
+Finished with webpage 212 
+Beginning to crawl webpage 212 
+Finished with webpage 213 
+Beginning to crawl webpage 213 
+Finished with webpage 214 
+Beginning to crawl webpage 214 
+Finished with webpage 215 
+Beginning to crawl webpage 215 
+Finished with webpage 216 
+Beginning to crawl webpage 216 
+Finished with webpage 217 
+Beginning to crawl webpage 217 
+Finished with webpage 218 
+Beginning to crawl webpage 218 
+Finished with webpage 219 
+Beginning to crawl webpage 219 
+Finished with webpage 220 
+Beginning to crawl webpage 220 
+Finished with webpage 221 
+Beginning to crawl webpage 221 
+Finished with webpage 222 
+Beginning to crawl webpage 222 
+Finished with webpage 223 
+Beginning to crawl webpage 223 
+Finished with webpage 224 
+Beginning to crawl webpage 224 
+Finished with webpage 225 
+Beginning to crawl webpage 225 
+Finished with webpage 226 
+Beginning to crawl webpage 226 
+Finished with webpage 227 
+Beginning to crawl webpage 227 
+Finished with webpage 228 
+Beginning to crawl webpage 228 
+Finished with webpage 229 
+Beginning to crawl webpage 229 
+Finished with webpage 230 
+Beginning to crawl webpage 230 
+Finished with webpage 231 
+Beginning to crawl webpage 231 
+Finished with webpage 232 
+Beginning to crawl webpage 232 
+Finished with webpage 233 
+Beginning to crawl webpage 233 
+Finished with webpage 234 
+Beginning to crawl webpage 234 
+Finished with webpage 235 
+Beginning to crawl webpage 235 
+Finished with webpage 236 
+Beginning to crawl webpage 236 
+Finished with webpage 237 
+Beginning to crawl webpage 237 
+Finished with webpage 238 
+Beginning to crawl webpage 238 
+Finished with webpage 239 
+Beginning to crawl webpage 239 
+Finished with webpage 240 
+Beginning to crawl webpage 240 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Yale_Bulldogs_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 240 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Yale_Bulldogs_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 240 
+Finished with webpage 241 
+Beginning to crawl webpage 241 
+Finished with webpage 242 
+Beginning to crawl webpage 242 
+Finished with webpage 243 
+Beginning to crawl webpage 243 
+Finished with webpage 244 
+Beginning to crawl webpage 244 
+Finished with webpage 245 
+Beginning to crawl webpage 245 
+Finished with webpage 246 
+Beginning to crawl webpage 246 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/RPI_Engineers_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 246 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/RPI_Engineers_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 246 
+Finished with webpage 247 
+Beginning to crawl webpage 247 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Quinnipiac_Bobcats_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 247 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Quinnipiac_Bobcats_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 247 
+Finished with webpage 248 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Princeton_Tigers_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Princeton_Tigers_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Harvard_Crimson_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Harvard_Crimson_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_Big_Green_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_Big_Green_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Cornell_Big_Red_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Cornell_Big_Red_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Colgate_Raiders_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Colgate_Raiders_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 248 
+Finished with webpage 249 
+Beginning to crawl webpage 249 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Clarkson_Golden_Knights_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 249 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Clarkson_Golden_Knights_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 249 
+Finished with webpage 250 
+Beginning to crawl webpage 250 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Brown_Bears_women%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 250 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Brown_Bears_men%27s_ice_hockey.html could not be extracted. 
+Beginning to crawl webpage 250 
+Finished with webpage 251 
+Beginning to crawl webpage 251 
+Finished with webpage 252 
+Beginning to crawl webpage 252 
+Finished with webpage 253 
+Beginning to crawl webpage 253 
+Finished with webpage 254 
+Beginning to crawl webpage 254 
+Finished with webpage 255 
+Beginning to crawl webpage 255 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/St._John%27s_College_(Annapolis/Santa_Fe).html could not be extracted. 
+Beginning to crawl webpage 255 
+Finished with webpage 256 
+Beginning to crawl webpage 256 
+Finished with webpage 257 
+Beginning to crawl webpage 257 
+Finished with webpage 258 
+Beginning to crawl webpage 258 
+Finished with webpage 259 
+Beginning to crawl webpage 259 
+Finished with webpage 260 
+Beginning to crawl webpage 260 
+Finished with webpage 261 
+Beginning to crawl webpage 261 
+Finished with webpage 262 
+Beginning to crawl webpage 262 
+Finished with webpage 263 
+Beginning to crawl webpage 263 
+Finished with webpage 264 
+Beginning to crawl webpage 264 
+Finished with webpage 265 
+Beginning to crawl webpage 265 
+Finished with webpage 266 
+Beginning to crawl webpage 266 
+Finished with webpage 267 
+Beginning to crawl webpage 267 
+Finished with webpage 268 
+Beginning to crawl webpage 268 
+Finished with webpage 269 
+Beginning to crawl webpage 269 
+Finished with webpage 270 
+Beginning to crawl webpage 270 
+Finished with webpage 271 
+Beginning to crawl webpage 271 
+Finished with webpage 272 
+Beginning to crawl webpage 272 
+Finished with webpage 273 
+Beginning to crawl webpage 273 
+Finished with webpage 274 
+Beginning to crawl webpage 274 
+Finished with webpage 275 
+Beginning to crawl webpage 275 
+Finished with webpage 276 
+Beginning to crawl webpage 276 
+Finished with webpage 277 
+Beginning to crawl webpage 277 
+Finished with webpage 278 
+Beginning to crawl webpage 278 
+Finished with webpage 279 
+Beginning to crawl webpage 279 
+Finished with webpage 280 
+Beginning to crawl webpage 280 
+Finished with webpage 281 
+Beginning to crawl webpage 281 
+Finished with webpage 282 
+Beginning to crawl webpage 282 
+Finished with webpage 283 
+Beginning to crawl webpage 283 
+Finished with webpage 284 
+Beginning to crawl webpage 284 
+Finished with webpage 285 
+Beginning to crawl webpage 285 
+Finished with webpage 286 
+Beginning to crawl webpage 286 
+Finished with webpage 287 
+Beginning to crawl webpage 287 
+Finished with webpage 288 
+Beginning to crawl webpage 288 
+Finished with webpage 289 
+Beginning to crawl webpage 289 
+Finished with webpage 290 
+Beginning to crawl webpage 290 
+Finished with webpage 291 
+Beginning to crawl webpage 291 
+Finished with webpage 292 
+Beginning to crawl webpage 292 
+Finished with webpage 293 
+Beginning to crawl webpage 293 
+Finished with webpage 294 
+Beginning to crawl webpage 294 
+Finished with webpage 295 
+Beginning to crawl webpage 295 
+Finished with webpage 296 
+Beginning to crawl webpage 296 
+Finished with webpage 297 
+Beginning to crawl webpage 297 
+Finished with webpage 298 
+Beginning to crawl webpage 298 
+Finished with webpage 299 
+Beginning to crawl webpage 299 
+Finished with webpage 300 
+Beginning to crawl webpage 300 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_Big_Green_men%27s_lacrosse.html could not be extracted. 
+Beginning to crawl webpage 300 
+Finished with webpage 301 
+Beginning to crawl webpage 301 
+Finished with webpage 302 
+Beginning to crawl webpage 302 
+Finished with webpage 303 
+Beginning to crawl webpage 303 
+Finished with webpage 304 
+Beginning to crawl webpage 304 
+Finished with webpage 305 
+Beginning to crawl webpage 305 
+Finished with webpage 306 
+Beginning to crawl webpage 306 
+Finished with webpage 307 
+Beginning to crawl webpage 307 
+Finished with webpage 308 
+Beginning to crawl webpage 308 
+Finished with webpage 309 
+Beginning to crawl webpage 309 
+Finished with webpage 310 
+Beginning to crawl webpage 310 
+Finished with webpage 311 
+Beginning to crawl webpage 311 
+Finished with webpage 312 
+Beginning to crawl webpage 312 
+Finished with webpage 313 
+Beginning to crawl webpage 313 
+Finished with webpage 314 
+Beginning to crawl webpage 314 
+Finished with webpage 315 
+Beginning to crawl webpage 315 
+Finished with webpage 316 
+Beginning to crawl webpage 316 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/National_Lampoon%27s_Animal_House.html could not be extracted. 
+Beginning to crawl webpage 316 
+Finished with webpage 317 
+Beginning to crawl webpage 317 
+Finished with webpage 318 
+Beginning to crawl webpage 318 
+Finished with webpage 319 
+Beginning to crawl webpage 319 
+Finished with webpage 320 
+Beginning to crawl webpage 320 
+Finished with webpage 321 
+Beginning to crawl webpage 321 
+Finished with webpage 322 
+Beginning to crawl webpage 322 
+Finished with webpage 323 
+Beginning to crawl webpage 323 
+Finished with webpage 324 
+Beginning to crawl webpage 324 
+Finished with webpage 325 
+Beginning to crawl webpage 325 
+Finished with webpage 326 
+Beginning to crawl webpage 326 
+Finished with webpage 327 
+Beginning to crawl webpage 327 
+Finished with webpage 328 
+Beginning to crawl webpage 328 
+Finished with webpage 329 
+Beginning to crawl webpage 329 
+Finished with webpage 330 
+Beginning to crawl webpage 330 
+Finished with webpage 331 
+Beginning to crawl webpage 331 
+Finished with webpage 332 
+Beginning to crawl webpage 332 
+Finished with webpage 333 
+Beginning to crawl webpage 333 
+Finished with webpage 334 
+Beginning to crawl webpage 334 
+Finished with webpage 335 
+Beginning to crawl webpage 335 
+Finished with webpage 336 
+Beginning to crawl webpage 336 
+Finished with webpage 337 
+Beginning to crawl webpage 337 
+Finished with webpage 338 
+Beginning to crawl webpage 338 
+Finished with webpage 339 
+Beginning to crawl webpage 339 
+Finished with webpage 340 
+Beginning to crawl webpage 340 
+Finished with webpage 341 
+Beginning to crawl webpage 341 
+Finished with webpage 342 
+Beginning to crawl webpage 342 
+Finished with webpage 343 
+Beginning to crawl webpage 343 
+Finished with webpage 344 
+Beginning to crawl webpage 344 
+Finished with webpage 345 
+Beginning to crawl webpage 345 
+Finished with webpage 346 
+Beginning to crawl webpage 346 
+Finished with webpage 347 
+Beginning to crawl webpage 347 
+Finished with webpage 348 
+Beginning to crawl webpage 348 
+Finished with webpage 349 
+Beginning to crawl webpage 349 
+Finished with webpage 350 
+Beginning to crawl webpage 350 
+Finished with webpage 351 
+Beginning to crawl webpage 351 
+Finished with webpage 352 
+Beginning to crawl webpage 352 
+Finished with webpage 353 
+Beginning to crawl webpage 353 
+Finished with webpage 354 
+Beginning to crawl webpage 354 
+Finished with webpage 355 
+Beginning to crawl webpage 355 
+Finished with webpage 356 
+Beginning to crawl webpage 356 
+Finished with webpage 357 
+Beginning to crawl webpage 357 
+Finished with webpage 358 
+Beginning to crawl webpage 358 
+Finished with webpage 359 
+Beginning to crawl webpage 359 
+Finished with webpage 360 
+Beginning to crawl webpage 360 
+Finished with webpage 361 
+Beginning to crawl webpage 361 
+Finished with webpage 362 
+Beginning to crawl webpage 362 
+Finished with webpage 363 
+Beginning to crawl webpage 363 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Mister_Rogers%27_Neighborhood.html could not be extracted. 
+Beginning to crawl webpage 363 
+Finished with webpage 364 
+Beginning to crawl webpage 364 
+Finished with webpage 365 
+Beginning to crawl webpage 365 
+Finished with webpage 366 
+Beginning to crawl webpage 366 
+Finished with webpage 367 
+Beginning to crawl webpage 367 
+Finished with webpage 368 
+Beginning to crawl webpage 368 
+Finished with webpage 369 
+Beginning to crawl webpage 369 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Grey%27s_Anatomy.html could not be extracted. 
+Beginning to crawl webpage 369 
+Finished with webpage 370 
+Beginning to crawl webpage 370 
+Finished with webpage 371 
+Beginning to crawl webpage 371 
+Finished with webpage 372 
+Beginning to crawl webpage 372 
+Finished with webpage 373 
+Beginning to crawl webpage 373 
+Finished with webpage 374 
+Beginning to crawl webpage 374 
+Finished with webpage 375 
+Beginning to crawl webpage 375 
+Finished with webpage 376 
+Beginning to crawl webpage 376 
+Finished with webpage 377 
+Beginning to crawl webpage 377 
+Finished with webpage 378 
+Beginning to crawl webpage 378 
+Finished with webpage 379 
+Beginning to crawl webpage 379 
+Finished with webpage 380 
+Beginning to crawl webpage 380 
+Finished with webpage 381 
+Beginning to crawl webpage 381 
+Finished with webpage 382 
+Beginning to crawl webpage 382 
+Finished with webpage 383 
+Beginning to crawl webpage 383 
+Finished with webpage 384 
+Beginning to crawl webpage 384 
+Finished with webpage 385 
+Beginning to crawl webpage 385 
+Finished with webpage 386 
+Beginning to crawl webpage 386 
+Finished with webpage 387 
+Beginning to crawl webpage 387 
+Finished with webpage 388 
+Beginning to crawl webpage 388 
+Finished with webpage 389 
+Beginning to crawl webpage 389 
+Finished with webpage 390 
+Beginning to crawl webpage 390 
+Finished with webpage 391 
+Beginning to crawl webpage 391 
+Finished with webpage 392 
+Beginning to crawl webpage 392 
+Finished with webpage 393 
+Beginning to crawl webpage 393 
+Finished with webpage 394 
+Beginning to crawl webpage 394 
+Finished with webpage 395 
+Beginning to crawl webpage 395 
+Finished with webpage 396 
+Beginning to crawl webpage 396 
+Finished with webpage 397 
+Beginning to crawl webpage 397 
+Finished with webpage 398 
+Beginning to crawl webpage 398 
+Finished with webpage 399 
+Beginning to crawl webpage 399 
+Finished with webpage 400 
+Beginning to crawl webpage 400 
+Finished with webpage 401 
+Beginning to crawl webpage 401 
+Finished with webpage 402 
+Beginning to crawl webpage 402 
+Finished with webpage 403 
+Beginning to crawl webpage 403 
+Finished with webpage 404 
+Beginning to crawl webpage 404 
+Finished with webpage 405 
+Beginning to crawl webpage 405 
+Finished with webpage 406 
+Beginning to crawl webpage 406 
+Finished with webpage 407 
+Beginning to crawl webpage 407 
+Finished with webpage 408 
+Beginning to crawl webpage 408 
+Finished with webpage 409 
+Beginning to crawl webpage 409 
+Finished with webpage 410 
+Beginning to crawl webpage 410 
+Finished with webpage 411 
+Beginning to crawl webpage 411 
+Finished with webpage 412 
+Beginning to crawl webpage 412 
+Finished with webpage 413 
+Beginning to crawl webpage 413 
+Finished with webpage 414 
+Beginning to crawl webpage 414 
+Finished with webpage 415 
+Beginning to crawl webpage 415 
+Finished with webpage 416 
+Beginning to crawl webpage 416 
+Finished with webpage 417 
+Beginning to crawl webpage 417 
+Finished with webpage 418 
+Beginning to crawl webpage 418 
+Finished with webpage 419 
+Beginning to crawl webpage 419 
+Finished with webpage 420 
+Beginning to crawl webpage 420 
+Finished with webpage 421 
+Beginning to crawl webpage 421 
+Finished with webpage 422 
+Beginning to crawl webpage 422 
+Finished with webpage 423 
+Beginning to crawl webpage 423 
+Finished with webpage 424 
+Beginning to crawl webpage 424 
+Finished with webpage 425 
+Beginning to crawl webpage 425 
+Finished with webpage 426 
+Beginning to crawl webpage 426 
+Finished with webpage 427 
+Beginning to crawl webpage 427 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dinesh_D%27Souza.html could not be extracted. 
+Beginning to crawl webpage 427 
+Finished with webpage 428 
+Beginning to crawl webpage 428 
+Finished with webpage 429 
+Beginning to crawl webpage 429 
+Finished with webpage 430 
+Beginning to crawl webpage 430 
+Finished with webpage 431 
+Beginning to crawl webpage 431 
+Finished with webpage 432 
+Beginning to crawl webpage 432 
+Finished with webpage 433 
+Beginning to crawl webpage 433 
+Finished with webpage 434 
+Beginning to crawl webpage 434 
+Finished with webpage 435 
+Beginning to crawl webpage 435 
+Finished with webpage 436 
+Beginning to crawl webpage 436 
+Finished with webpage 437 
+Beginning to crawl webpage 437 
+Finished with webpage 438 
+Beginning to crawl webpage 438 
+Finished with webpage 439 
+Beginning to crawl webpage 439 
+Finished with webpage 440 
+Beginning to crawl webpage 440 
+Finished with webpage 441 
+Beginning to crawl webpage 441 
+Finished with webpage 442 
+Beginning to crawl webpage 442 
+Finished with webpage 443 
+Beginning to crawl webpage 443 
+Finished with webpage 444 
+Beginning to crawl webpage 444 
+Finished with webpage 445 
+Beginning to crawl webpage 445 
+Finished with webpage 446 
+Beginning to crawl webpage 446 
+Finished with webpage 447 
+Beginning to crawl webpage 447 
+Finished with webpage 448 
+Beginning to crawl webpage 448 
+Finished with webpage 449 
+Beginning to crawl webpage 449 
+Finished with webpage 450 
+Beginning to crawl webpage 450 
+Finished with webpage 451 
+Beginning to crawl webpage 451 
+Finished with webpage 452 
+Beginning to crawl webpage 452 
+Finished with webpage 453 
+Beginning to crawl webpage 453 
+Finished with webpage 454 
+Beginning to crawl webpage 454 
+Finished with webpage 455 
+Beginning to crawl webpage 455 
+Finished with webpage 456 
+Beginning to crawl webpage 456 
+Finished with webpage 457 
+Beginning to crawl webpage 457 
+Finished with webpage 458 
+Beginning to crawl webpage 458 
+Finished with webpage 459 
+Beginning to crawl webpage 459 
+Finished with webpage 460 
+Beginning to crawl webpage 460 
+Finished with webpage 461 
+Beginning to crawl webpage 461 
+Finished with webpage 462 
+Beginning to crawl webpage 462 
+Finished with webpage 463 
+Beginning to crawl webpage 463 
+Finished with webpage 464 
+Beginning to crawl webpage 464 
+Finished with webpage 465 
+Beginning to crawl webpage 465 
+Finished with webpage 466 
+Beginning to crawl webpage 466 
+Finished with webpage 467 
+Beginning to crawl webpage 467 
+Finished with webpage 468 
+Beginning to crawl webpage 468 
+Finished with webpage 469 
+Beginning to crawl webpage 469 
+Finished with webpage 470 
+Beginning to crawl webpage 470 
+Finished with webpage 471 
+Beginning to crawl webpage 471 
+Finished with webpage 472 
+Beginning to crawl webpage 472 
+Finished with webpage 473 
+Beginning to crawl webpage 473 
+Finished with webpage 474 
+Beginning to crawl webpage 474 
+Finished with webpage 475 
+Beginning to crawl webpage 475 
+Finished with webpage 476 
+Beginning to crawl webpage 476 
+Finished with webpage 477 
+Beginning to crawl webpage 477 
+Finished with webpage 478 
+Beginning to crawl webpage 478 
+Finished with webpage 479 
+Beginning to crawl webpage 479 
+Finished with webpage 480 
+Beginning to crawl webpage 480 
+Finished with webpage 481 
+Beginning to crawl webpage 481 
+Finished with webpage 482 
+Beginning to crawl webpage 482 
+Finished with webpage 483 
+Beginning to crawl webpage 483 
+Finished with webpage 484 
+Beginning to crawl webpage 484 
+Finished with webpage 485 
+Beginning to crawl webpage 485 
+Finished with webpage 486 
+Beginning to crawl webpage 486 
+Finished with webpage 487 
+Beginning to crawl webpage 487 
+Finished with webpage 488 
+Beginning to crawl webpage 488 
+Finished with webpage 489 
+Beginning to crawl webpage 489 
+Finished with webpage 490 
+Beginning to crawl webpage 490 
+Finished with webpage 491 
+Beginning to crawl webpage 491 
+Finished with webpage 492 
+Beginning to crawl webpage 492 
+Finished with webpage 493 
+Beginning to crawl webpage 493 
+Finished with webpage 494 
+Beginning to crawl webpage 494 
+Finished with webpage 495 
+Beginning to crawl webpage 495 
+Finished with webpage 496 
+Beginning to crawl webpage 496 
+Finished with webpage 497 
+Beginning to crawl webpage 497 
+Finished with webpage 498 
+Beginning to crawl webpage 498 
+Finished with webpage 499 
+Beginning to crawl webpage 499 
+Finished with webpage 500 
+Beginning to crawl webpage 500 
+Finished with webpage 501 
+Beginning to crawl webpage 501 
+Finished with webpage 502 
+Beginning to crawl webpage 502 
+Finished with webpage 503 
+Beginning to crawl webpage 503 
+Finished with webpage 504 
+Beginning to crawl webpage 504 
+Finished with webpage 505 
+Beginning to crawl webpage 505 
+Finished with webpage 506 
+Beginning to crawl webpage 506 
+Finished with webpage 507 
+Beginning to crawl webpage 507 
+Finished with webpage 508 
+Beginning to crawl webpage 508 
+Finished with webpage 509 
+Beginning to crawl webpage 509 
+Finished with webpage 510 
+Beginning to crawl webpage 510 
+Finished with webpage 511 
+Beginning to crawl webpage 511 
+Finished with webpage 512 
+Beginning to crawl webpage 512 
+Finished with webpage 513 
+Beginning to crawl webpage 513 
+Finished with webpage 514 
+Beginning to crawl webpage 514 
+Finished with webpage 515 
+Beginning to crawl webpage 515 
+Finished with webpage 516 
+Beginning to crawl webpage 516 
+Finished with webpage 517 
+Beginning to crawl webpage 517 
+Finished with webpage 518 
+Beginning to crawl webpage 518 
+Finished with webpage 519 
+Beginning to crawl webpage 519 
+Finished with webpage 520 
+Beginning to crawl webpage 520 
+Finished with webpage 521 
+Beginning to crawl webpage 521 
+Finished with webpage 522 
+Beginning to crawl webpage 522 
+Finished with webpage 523 
+Beginning to crawl webpage 523 
+Finished with webpage 524 
+Beginning to crawl webpage 524 
+Finished with webpage 525 
+Beginning to crawl webpage 525 
+Finished with webpage 526 
+Beginning to crawl webpage 526 
+Finished with webpage 527 
+Beginning to crawl webpage 527 
+Finished with webpage 528 
+Beginning to crawl webpage 528 
+Finished with webpage 529 
+Beginning to crawl webpage 529 
+Finished with webpage 530 
+Beginning to crawl webpage 530 
+Finished with webpage 531 
+Beginning to crawl webpage 531 
+Finished with webpage 532 
+Beginning to crawl webpage 532 
+Finished with webpage 533 
+Beginning to crawl webpage 533 
+Finished with webpage 534 
+Beginning to crawl webpage 534 
+Finished with webpage 535 
+Beginning to crawl webpage 535 
+Finished with webpage 536 
+Beginning to crawl webpage 536 
+Finished with webpage 537 
+Beginning to crawl webpage 537 
+Finished with webpage 538 
+Beginning to crawl webpage 538 
+Finished with webpage 539 
+Beginning to crawl webpage 539 
+Finished with webpage 540 
+Beginning to crawl webpage 540 
+Finished with webpage 541 
+Beginning to crawl webpage 541 
+Finished with webpage 542 
+Beginning to crawl webpage 542 
+Finished with webpage 543 
+Beginning to crawl webpage 543 
+Finished with webpage 544 
+Beginning to crawl webpage 544 
+Finished with webpage 545 
+Beginning to crawl webpage 545 
+Finished with webpage 546 
+Beginning to crawl webpage 546 
+Finished with webpage 547 
+Beginning to crawl webpage 547 
+Finished with webpage 548 
+Beginning to crawl webpage 548 
+Finished with webpage 549 
+Beginning to crawl webpage 549 
+Finished with webpage 550 
+Beginning to crawl webpage 550 
+Finished with webpage 551 
+Beginning to crawl webpage 551 
+Finished with webpage 552 
+Beginning to crawl webpage 552 
+Finished with webpage 553 
+Beginning to crawl webpage 553 
+Finished with webpage 554 
+Beginning to crawl webpage 554 
+Finished with webpage 555 
+Beginning to crawl webpage 555 
+Finished with webpage 556 
+Beginning to crawl webpage 556 
+Finished with webpage 557 
+Beginning to crawl webpage 557 
+Finished with webpage 558 
+Beginning to crawl webpage 558 
+Finished with webpage 559 
+Beginning to crawl webpage 559 
+Finished with webpage 560 
+Beginning to crawl webpage 560 
+Finished with webpage 561 
+Beginning to crawl webpage 561 
+Finished with webpage 562 
+Beginning to crawl webpage 562 
+Finished with webpage 563 
+Beginning to crawl webpage 563 
+Finished with webpage 564 
+Beginning to crawl webpage 564 
+Finished with webpage 565 
+Beginning to crawl webpage 565 
+Finished with webpage 566 
+Beginning to crawl webpage 566 
+Finished with webpage 567 
+Beginning to crawl webpage 567 
+Finished with webpage 568 
+Beginning to crawl webpage 568 
+Finished with webpage 569 
+Beginning to crawl webpage 569 
+Finished with webpage 570 
+Beginning to crawl webpage 570 
+Finished with webpage 571 
+Beginning to crawl webpage 571 
+Finished with webpage 572 
+Beginning to crawl webpage 572 
+Finished with webpage 573 
+Beginning to crawl webpage 573 
+Finished with webpage 574 
+Beginning to crawl webpage 574 
+Finished with webpage 575 
+Beginning to crawl webpage 575 
+Finished with webpage 576 
+Beginning to crawl webpage 576 
+Finished with webpage 577 
+Beginning to crawl webpage 577 
+Finished with webpage 578 
+Beginning to crawl webpage 578 
+Finished with webpage 579 
+Beginning to crawl webpage 579 
+Finished with webpage 580 
+Beginning to crawl webpage 580 
+Finished with webpage 581 
+Beginning to crawl webpage 581 
+Finished with webpage 582 
+Beginning to crawl webpage 582 
+Finished with webpage 583 
+Beginning to crawl webpage 583 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Moor%27s_Charity_School.html could not be extracted. 
+Beginning to crawl webpage 583 
+Finished with webpage 584 
+Beginning to crawl webpage 584 
+Finished with webpage 585 
+Beginning to crawl webpage 585 
+Finished with webpage 586 
+Beginning to crawl webpage 586 
+Finished with webpage 587 
+Beginning to crawl webpage 587 
+Finished with webpage 588 
+Beginning to crawl webpage 588 
+Finished with webpage 589 
+Beginning to crawl webpage 589 
+Finished with webpage 590 
+Beginning to crawl webpage 590 
+Finished with webpage 591 
+Beginning to crawl webpage 591 
+Finished with webpage 592 
+Beginning to crawl webpage 592 
+Finished with webpage 593 
+Beginning to crawl webpage 593 
+Finished with webpage 594 
+Beginning to crawl webpage 594 
+Finished with webpage 595 
+Beginning to crawl webpage 595 
+Finished with webpage 596 
+Beginning to crawl webpage 596 
+Finished with webpage 597 
+Beginning to crawl webpage 597 
+Finished with webpage 598 
+Beginning to crawl webpage 598 
+Finished with webpage 599 
+Beginning to crawl webpage 599 
+Finished with webpage 600 
+Beginning to crawl webpage 600 
+Finished with webpage 601 
+Beginning to crawl webpage 601 
+Finished with webpage 602 
+Beginning to crawl webpage 602 
+Finished with webpage 603 
+Beginning to crawl webpage 603 
+Finished with webpage 604 
+Beginning to crawl webpage 604 
+Finished with webpage 605 
+Beginning to crawl webpage 605 
+Finished with webpage 606 
+Beginning to crawl webpage 606 
+Finished with webpage 607 
+Beginning to crawl webpage 607 
+Finished with webpage 608 
+Beginning to crawl webpage 608 
+Finished with webpage 609 
+Beginning to crawl webpage 609 
+Finished with webpage 610 
+Beginning to crawl webpage 610 
+Finished with webpage 611 
+Beginning to crawl webpage 611 
+Finished with webpage 612 
+Beginning to crawl webpage 612 
+Finished with webpage 613 
+Beginning to crawl webpage 613 
+Finished with webpage 614 
+Beginning to crawl webpage 614 
+Finished with webpage 615 
+Beginning to crawl webpage 615 
+Finished with webpage 616 
+Beginning to crawl webpage 616 
+Finished with webpage 617 
+Beginning to crawl webpage 617 
+Finished with webpage 618 
+Beginning to crawl webpage 618 
+Finished with webpage 619 
+Beginning to crawl webpage 619 
+Finished with webpage 620 
+Beginning to crawl webpage 620 
+Finished with webpage 621 
+Beginning to crawl webpage 621 
+Finished with webpage 622 
+Beginning to crawl webpage 622 
+Finished with webpage 623 
+Beginning to crawl webpage 623 
+Finished with webpage 624 
+Beginning to crawl webpage 624 
+Finished with webpage 625 
+Beginning to crawl webpage 625 
+Finished with webpage 626 
+Beginning to crawl webpage 626 
+Finished with webpage 627 
+Beginning to crawl webpage 627 
+Finished with webpage 628 
+Beginning to crawl webpage 628 
+Finished with webpage 629 
+Beginning to crawl webpage 629 
+Finished with webpage 630 
+Beginning to crawl webpage 630 
+Finished with webpage 631 
+Beginning to crawl webpage 631 
+Finished with webpage 632 
+Beginning to crawl webpage 632 
+Finished with webpage 633 
+Beginning to crawl webpage 633 
+Finished with webpage 634 
+Beginning to crawl webpage 634 
+Finished with webpage 635 
+Beginning to crawl webpage 635 
+Finished with webpage 636 
+Beginning to crawl webpage 636 
+Finished with webpage 637 
+Beginning to crawl webpage 637 
+Finished with webpage 638 
+Beginning to crawl webpage 638 
+Finished with webpage 639 
+Beginning to crawl webpage 639 
+Finished with webpage 640 
+Beginning to crawl webpage 640 
+Finished with webpage 641 
+Beginning to crawl webpage 641 
+Finished with webpage 642 
+Beginning to crawl webpage 642 
+Finished with webpage 643 
+Beginning to crawl webpage 643 
+Finished with webpage 644 
+Beginning to crawl webpage 644 
+Finished with webpage 645 
+Beginning to crawl webpage 645 
+Finished with webpage 646 
+Beginning to crawl webpage 646 
+Finished with webpage 647 
+Beginning to crawl webpage 647 
+Finished with webpage 648 
+Beginning to crawl webpage 648 
+Finished with webpage 649 
+Beginning to crawl webpage 649 
+Finished with webpage 650 
+Beginning to crawl webpage 650 
+Finished with webpage 651 
+Beginning to crawl webpage 651 
+Finished with webpage 652 
+Beginning to crawl webpage 652 
+Finished with webpage 653 
+Beginning to crawl webpage 653 
+Finished with webpage 654 
+Beginning to crawl webpage 654 
+Finished with webpage 655 
+Beginning to crawl webpage 655 
+Finished with webpage 656 
+Beginning to crawl webpage 656 
+Finished with webpage 657 
+Beginning to crawl webpage 657 
+Finished with webpage 658 
+Beginning to crawl webpage 658 
+Finished with webpage 659 
+Beginning to crawl webpage 659 
+Finished with webpage 660 
+Beginning to crawl webpage 660 
+Finished with webpage 661 
+Beginning to crawl webpage 661 
+Finished with webpage 662 
+Beginning to crawl webpage 662 
+Finished with webpage 663 
+Beginning to crawl webpage 663 
+Finished with webpage 664 
+Beginning to crawl webpage 664 
+Finished with webpage 665 
+Beginning to crawl webpage 665 
+Finished with webpage 666 
+Beginning to crawl webpage 666 
+Finished with webpage 667 
+Beginning to crawl webpage 667 
+Finished with webpage 668 
+Beginning to crawl webpage 668 
+Finished with webpage 669 
+Beginning to crawl webpage 669 
+Finished with webpage 670 
+Beginning to crawl webpage 670 
+Finished with webpage 671 
+Beginning to crawl webpage 671 
+Finished with webpage 672 
+Beginning to crawl webpage 672 
+Finished with webpage 673 
+Beginning to crawl webpage 673 
+Finished with webpage 674 
+Beginning to crawl webpage 674 
+Finished with webpage 675 
+Beginning to crawl webpage 675 
+Finished with webpage 676 
+Beginning to crawl webpage 676 
+Finished with webpage 677 
+Beginning to crawl webpage 677 
+Finished with webpage 678 
+Beginning to crawl webpage 678 
+Finished with webpage 679 
+Beginning to crawl webpage 679 
+Finished with webpage 680 
+Beginning to crawl webpage 680 
+Finished with webpage 681 
+Beginning to crawl webpage 681 
+Finished with webpage 682 
+Beginning to crawl webpage 682 
+Finished with webpage 683 
+Beginning to crawl webpage 683 
+Finished with webpage 684 
+Beginning to crawl webpage 684 
+Finished with webpage 685 
+Beginning to crawl webpage 685 
+Finished with webpage 686 
+Beginning to crawl webpage 686 
+Finished with webpage 687 
+Beginning to crawl webpage 687 
+Finished with webpage 688 
+Beginning to crawl webpage 688 
+Finished with webpage 689 
+Beginning to crawl webpage 689 
+Finished with webpage 690 
+Beginning to crawl webpage 690 
+Finished with webpage 691 
+Beginning to crawl webpage 691 
+Finished with webpage 692 
+Beginning to crawl webpage 692 
+Finished with webpage 693 
+Beginning to crawl webpage 693 
+Finished with webpage 694 
+Beginning to crawl webpage 694 
+Finished with webpage 695 
+Beginning to crawl webpage 695 
+Finished with webpage 696 
+Beginning to crawl webpage 696 
+Finished with webpage 697 
+Beginning to crawl webpage 697 
+Finished with webpage 698 
+Beginning to crawl webpage 698 
+Finished with webpage 699 
+Beginning to crawl webpage 699 
+Finished with webpage 700 
+Beginning to crawl webpage 700 
+Finished with webpage 701 
+Beginning to crawl webpage 701 
+Finished with webpage 702 
+Beginning to crawl webpage 702 
+Finished with webpage 703 
+Beginning to crawl webpage 703 
+Finished with webpage 704 
+Beginning to crawl webpage 704 
+Finished with webpage 705 
+Beginning to crawl webpage 705 
+Finished with webpage 706 
+Beginning to crawl webpage 706 
+Finished with webpage 707 
+Beginning to crawl webpage 707 
+Finished with webpage 708 
+Beginning to crawl webpage 708 
+Finished with webpage 709 
+Beginning to crawl webpage 709 
+Finished with webpage 710 
+Beginning to crawl webpage 710 
+Finished with webpage 711 
+Beginning to crawl webpage 711 
+Finished with webpage 712 
+Beginning to crawl webpage 712 
+Finished with webpage 713 
+Beginning to crawl webpage 713 
+Finished with webpage 714 
+Beginning to crawl webpage 714 
+Finished with webpage 715 
+Beginning to crawl webpage 715 
+Finished with webpage 716 
+Beginning to crawl webpage 716 
+Finished with webpage 717 
+Beginning to crawl webpage 717 
+Finished with webpage 718 
+Beginning to crawl webpage 718 
+Finished with webpage 719 
+Beginning to crawl webpage 719 
+Finished with webpage 720 
+Beginning to crawl webpage 720 
+Finished with webpage 721 
+Beginning to crawl webpage 721 
+Finished with webpage 722 
+Beginning to crawl webpage 722 
+Finished with webpage 723 
+Beginning to crawl webpage 723 
+Finished with webpage 724 
+Beginning to crawl webpage 724 
+Finished with webpage 725 
+Beginning to crawl webpage 725 
+Finished with webpage 726 
+Beginning to crawl webpage 726 
+Finished with webpage 727 
+Beginning to crawl webpage 727 
+Finished with webpage 728 
+Beginning to crawl webpage 728 
+Finished with webpage 729 
+Beginning to crawl webpage 729 
+Finished with webpage 730 
+Beginning to crawl webpage 730 
+Finished with webpage 731 
+Beginning to crawl webpage 731 
+Finished with webpage 732 
+Beginning to crawl webpage 732 
+Finished with webpage 733 
+Beginning to crawl webpage 733 
+Finished with webpage 734 
+Beginning to crawl webpage 734 
+Finished with webpage 735 
+Beginning to crawl webpage 735 
+Finished with webpage 736 
+Beginning to crawl webpage 736 
+Finished with webpage 737 
+Beginning to crawl webpage 737 
+Finished with webpage 738 
+Beginning to crawl webpage 738 
+Finished with webpage 739 
+Beginning to crawl webpage 739 
+Finished with webpage 740 
+Beginning to crawl webpage 740 
+Finished with webpage 741 
+Beginning to crawl webpage 741 
+Finished with webpage 742 
+Beginning to crawl webpage 742 
+Finished with webpage 743 
+Beginning to crawl webpage 743 
+Finished with webpage 744 
+Beginning to crawl webpage 744 
+Finished with webpage 745 
+Beginning to crawl webpage 745 
+Finished with webpage 746 
+Beginning to crawl webpage 746 
+Finished with webpage 747 
+Beginning to crawl webpage 747 
+Finished with webpage 748 
+Beginning to crawl webpage 748 
+Finished with webpage 749 
+Beginning to crawl webpage 749 
+Finished with webpage 750 
+Beginning to crawl webpage 750 
+Finished with webpage 751 
+Beginning to crawl webpage 751 
+Finished with webpage 752 
+Beginning to crawl webpage 752 
+Finished with webpage 753 
+Beginning to crawl webpage 753 
+Finished with webpage 754 
+Beginning to crawl webpage 754 
+Finished with webpage 755 
+Beginning to crawl webpage 755 
+Finished with webpage 756 
+Beginning to crawl webpage 756 
+Finished with webpage 757 
+Beginning to crawl webpage 757 
+Finished with webpage 758 
+Beginning to crawl webpage 758 
+Finished with webpage 759 
+Beginning to crawl webpage 759 
+Finished with webpage 760 
+Beginning to crawl webpage 760 
+Finished with webpage 761 
+Beginning to crawl webpage 761 
+Finished with webpage 762 
+Beginning to crawl webpage 762 
+Finished with webpage 763 
+Beginning to crawl webpage 763 
+Finished with webpage 764 
+Beginning to crawl webpage 764 
+Finished with webpage 765 
+Beginning to crawl webpage 765 
+Finished with webpage 766 
+Beginning to crawl webpage 766 
+Finished with webpage 767 
+Beginning to crawl webpage 767 
+Finished with webpage 768 
+Beginning to crawl webpage 768 
+Finished with webpage 769 
+Beginning to crawl webpage 769 
+Finished with webpage 770 
+Beginning to crawl webpage 770 
+Finished with webpage 771 
+Beginning to crawl webpage 771 
+Finished with webpage 772 
+Beginning to crawl webpage 772 
+Finished with webpage 773 
+Beginning to crawl webpage 773 
+Finished with webpage 774 
+Beginning to crawl webpage 774 
+Finished with webpage 775 
+Beginning to crawl webpage 775 
+Finished with webpage 776 
+Beginning to crawl webpage 776 
+Finished with webpage 777 
+Beginning to crawl webpage 777 
+Finished with webpage 778 
+Beginning to crawl webpage 778 
+Finished with webpage 779 
+Beginning to crawl webpage 779 
+Finished with webpage 780 
+Beginning to crawl webpage 780 
+Finished with webpage 781 
+Beginning to crawl webpage 781 
+Finished with webpage 782 
+Beginning to crawl webpage 782 
+Finished with webpage 783 
+Beginning to crawl webpage 783 
+Finished with webpage 784 
+Beginning to crawl webpage 784 
+Finished with webpage 785 
+Beginning to crawl webpage 785 
+Finished with webpage 786 
+Beginning to crawl webpage 786 
+Finished with webpage 787 
+Beginning to crawl webpage 787 
+Finished with webpage 788 
+Beginning to crawl webpage 788 
+Finished with webpage 789 
+Beginning to crawl webpage 789 
+Finished with webpage 790 
+Beginning to crawl webpage 790 
+Finished with webpage 791 
+Beginning to crawl webpage 791 
+Finished with webpage 792 
+Beginning to crawl webpage 792 
+Finished with webpage 793 
+Beginning to crawl webpage 793 
+Finished with webpage 794 
+Beginning to crawl webpage 794 
+Finished with webpage 795 
+Beginning to crawl webpage 795 
+Finished with webpage 796 
+Beginning to crawl webpage 796 
+Finished with webpage 797 
+Beginning to crawl webpage 797 
+Finished with webpage 798 
+Beginning to crawl webpage 798 
+Finished with webpage 799 
+Beginning to crawl webpage 799 
+Finished with webpage 800 
+Beginning to crawl webpage 800 
+Finished with webpage 801 
+Beginning to crawl webpage 801 
+Finished with webpage 802 
+Beginning to crawl webpage 802 
+Finished with webpage 803 
+Beginning to crawl webpage 803 
+Finished with webpage 804 
+Beginning to crawl webpage 804 
+Finished with webpage 805 
+Beginning to crawl webpage 805 
+Finished with webpage 806 
+Beginning to crawl webpage 806 
+Finished with webpage 807 
+Beginning to crawl webpage 807 
+Finished with webpage 808 
+Beginning to crawl webpage 808 
+Finished with webpage 809 
+Beginning to crawl webpage 809 
+Finished with webpage 810 
+Beginning to crawl webpage 810 
+Finished with webpage 811 
+Beginning to crawl webpage 811 
+Finished with webpage 812 
+Beginning to crawl webpage 812 
+Finished with webpage 813 
+Beginning to crawl webpage 813 
+Finished with webpage 814 
+Beginning to crawl webpage 814 
+Finished with webpage 815 
+Beginning to crawl webpage 815 
+Finished with webpage 816 
+Beginning to crawl webpage 816 
+Finished with webpage 817 
+Beginning to crawl webpage 817 
+Finished with webpage 818 
+Beginning to crawl webpage 818 
+Finished with webpage 819 
+Beginning to crawl webpage 819 
+Finished with webpage 820 
+Beginning to crawl webpage 820 
+Finished with webpage 821 
+Beginning to crawl webpage 821 
+Finished with webpage 822 
+Beginning to crawl webpage 822 
+Finished with webpage 823 
+Beginning to crawl webpage 823 
+Finished with webpage 824 
+Beginning to crawl webpage 824 
+Finished with webpage 825 
+Beginning to crawl webpage 825 
+Finished with webpage 826 
+Beginning to crawl webpage 826 
+Finished with webpage 827 
+Beginning to crawl webpage 827 
+Finished with webpage 828 
+Beginning to crawl webpage 828 
+Finished with webpage 829 
+Beginning to crawl webpage 829 
+Finished with webpage 830 
+Beginning to crawl webpage 830 
+Finished with webpage 831 
+Beginning to crawl webpage 831 
+Finished with webpage 832 
+Beginning to crawl webpage 832 
+Finished with webpage 833 
+Beginning to crawl webpage 833 
+Finished with webpage 834 
+Beginning to crawl webpage 834 
+Finished with webpage 835 
+Beginning to crawl webpage 835 
+Finished with webpage 836 
+Beginning to crawl webpage 836 
+Finished with webpage 837 
+Beginning to crawl webpage 837 
+Finished with webpage 838 
+Beginning to crawl webpage 838 
+Finished with webpage 839 
+Beginning to crawl webpage 839 
+Finished with webpage 840 
+Beginning to crawl webpage 840 
+Finished with webpage 841 
+Beginning to crawl webpage 841 
+Finished with webpage 842 
+Beginning to crawl webpage 842 
+Finished with webpage 843 
+Beginning to crawl webpage 843 
+Finished with webpage 844 
+Beginning to crawl webpage 844 
+Finished with webpage 845 
+Beginning to crawl webpage 845 
+Finished with webpage 846 
+Beginning to crawl webpage 846 
+Finished with webpage 847 
+Beginning to crawl webpage 847 
+Finished with webpage 848 
+Beginning to crawl webpage 848 
+Finished with webpage 849 
+Beginning to crawl webpage 849 
+Finished with webpage 850 
+Beginning to crawl webpage 850 
+Finished with webpage 851 
+Beginning to crawl webpage 851 
+Finished with webpage 852 
+Beginning to crawl webpage 852 
+Finished with webpage 853 
+Beginning to crawl webpage 853 
+Finished with webpage 854 
+Beginning to crawl webpage 854 
+Finished with webpage 855 
+Beginning to crawl webpage 855 
+Finished with webpage 856 
+Beginning to crawl webpage 856 
+Finished with webpage 857 
+Beginning to crawl webpage 857 
+Finished with webpage 858 
+Beginning to crawl webpage 858 
+Finished with webpage 859 
+Beginning to crawl webpage 859 
+Finished with webpage 860 
+Beginning to crawl webpage 860 
+Finished with webpage 861 
+Beginning to crawl webpage 861 
+Finished with webpage 862 
+Beginning to crawl webpage 862 
+Finished with webpage 863 
+Beginning to crawl webpage 863 
+Finished with webpage 864 
+Beginning to crawl webpage 864 
+Finished with webpage 865 
+Beginning to crawl webpage 865 
+Finished with webpage 866 
+Beginning to crawl webpage 866 
+Finished with webpage 867 
+Beginning to crawl webpage 867 
+Finished with webpage 868 
+Beginning to crawl webpage 868 
+Finished with webpage 869 
+Beginning to crawl webpage 869 
+Finished with webpage 870 
+Beginning to crawl webpage 870 
+Finished with webpage 871 
+Beginning to crawl webpage 871 
+Finished with webpage 872 
+Beginning to crawl webpage 872 
+Finished with webpage 873 
+Beginning to crawl webpage 873 
+Finished with webpage 874 
+Beginning to crawl webpage 874 
+Finished with webpage 875 
+Beginning to crawl webpage 875 
+Finished with webpage 876 
+Beginning to crawl webpage 876 
+Finished with webpage 877 
+Beginning to crawl webpage 877 
+Finished with webpage 878 
+Beginning to crawl webpage 878 
+Finished with webpage 879 
+Beginning to crawl webpage 879 
+Finished with webpage 880 
+Beginning to crawl webpage 880 
+Finished with webpage 881 
+Beginning to crawl webpage 881 
+Finished with webpage 882 
+Beginning to crawl webpage 882 
+Finished with webpage 883 
+Beginning to crawl webpage 883 
+Finished with webpage 884 
+Beginning to crawl webpage 884 
+Finished with webpage 885 
+Beginning to crawl webpage 885 
+Finished with webpage 886 
+Beginning to crawl webpage 886 
+Finished with webpage 887 
+Beginning to crawl webpage 887 
+Finished with webpage 888 
+Beginning to crawl webpage 888 
+Finished with webpage 889 
+Beginning to crawl webpage 889 
+Finished with webpage 890 
+Beginning to crawl webpage 890 
+Finished with webpage 891 
+Beginning to crawl webpage 891 
+Finished with webpage 892 
+Beginning to crawl webpage 892 
+Finished with webpage 893 
+Beginning to crawl webpage 893 
+Finished with webpage 894 
+Beginning to crawl webpage 894 
+Finished with webpage 895 
+Beginning to crawl webpage 895 
+Finished with webpage 896 
+Beginning to crawl webpage 896 
+Finished with webpage 897 
+Beginning to crawl webpage 897 
+Finished with webpage 898 
+Beginning to crawl webpage 898 
+Finished with webpage 899 
+Beginning to crawl webpage 899 
+Finished with webpage 900 
+Beginning to crawl webpage 900 
+Finished with webpage 901 
+Beginning to crawl webpage 901 
+Finished with webpage 902 
+Beginning to crawl webpage 902 
+Finished with webpage 903 
+Beginning to crawl webpage 903 
+Finished with webpage 904 
+Beginning to crawl webpage 904 
+Finished with webpage 905 
+Beginning to crawl webpage 905 
+Finished with webpage 906 
+Beginning to crawl webpage 906 
+Finished with webpage 907 
+Beginning to crawl webpage 907 
+Finished with webpage 908 
+Beginning to crawl webpage 908 
+Finished with webpage 909 
+Beginning to crawl webpage 909 
+Finished with webpage 910 
+Beginning to crawl webpage 910 
+Finished with webpage 911 
+Beginning to crawl webpage 911 
+Finished with webpage 912 
+Beginning to crawl webpage 912 
+Finished with webpage 913 
+Beginning to crawl webpage 913 
+Finished with webpage 914 
+Beginning to crawl webpage 914 
+Finished with webpage 915 
+Beginning to crawl webpage 915 
+Finished with webpage 916 
+Beginning to crawl webpage 916 
+Finished with webpage 917 
+Beginning to crawl webpage 917 
+Finished with webpage 918 
+Beginning to crawl webpage 918 
+Finished with webpage 919 
+Beginning to crawl webpage 919 
+Finished with webpage 920 
+Beginning to crawl webpage 920 
+Finished with webpage 921 
+Beginning to crawl webpage 921 
+Finished with webpage 922 
+Beginning to crawl webpage 922 
+Finished with webpage 923 
+Beginning to crawl webpage 923 
+Finished with webpage 924 
+Beginning to crawl webpage 924 
+Finished with webpage 925 
+Beginning to crawl webpage 925 
+Finished with webpage 926 
+Beginning to crawl webpage 926 
+Finished with webpage 927 
+Beginning to crawl webpage 927 
+Finished with webpage 928 
+Beginning to crawl webpage 928 
+Finished with webpage 929 
+Beginning to crawl webpage 929 
+Finished with webpage 930 
+Beginning to crawl webpage 930 
+Finished with webpage 931 
+Beginning to crawl webpage 931 
+Finished with webpage 932 
+Beginning to crawl webpage 932 
+Finished with webpage 933 
+Beginning to crawl webpage 933 
+Finished with webpage 934 
+Beginning to crawl webpage 934 
+Finished with webpage 935 
+Beginning to crawl webpage 935 
+Finished with webpage 936 
+Beginning to crawl webpage 936 
+Finished with webpage 937 
+Beginning to crawl webpage 937 
+Finished with webpage 938 
+Beginning to crawl webpage 938 
+Finished with webpage 939 
+Beginning to crawl webpage 939 
+Finished with webpage 940 
+Beginning to crawl webpage 940 
+Finished with webpage 941 
+Beginning to crawl webpage 941 
+Finished with webpage 942 
+Beginning to crawl webpage 942 
+Finished with webpage 943 
+Beginning to crawl webpage 943 
+Finished with webpage 944 
+Beginning to crawl webpage 944 
+Finished with webpage 945 
+Beginning to crawl webpage 945 
+Finished with webpage 946 
+Beginning to crawl webpage 946 
+Finished with webpage 947 
+Beginning to crawl webpage 947 
+Finished with webpage 948 
+Beginning to crawl webpage 948 
+Finished with webpage 949 
+Beginning to crawl webpage 949 
+Finished with webpage 950 
+Beginning to crawl webpage 950 
+Finished with webpage 951 
+Beginning to crawl webpage 951 
+Finished with webpage 952 
+Beginning to crawl webpage 952 
+Finished with webpage 953 
+Beginning to crawl webpage 953 
+Finished with webpage 954 
+Beginning to crawl webpage 954 
+Finished with webpage 955 
+Beginning to crawl webpage 955 
+Finished with webpage 956 
+Beginning to crawl webpage 956 
+Finished with webpage 957 
+Beginning to crawl webpage 957 
+Finished with webpage 958 
+Beginning to crawl webpage 958 
+Finished with webpage 959 
+Beginning to crawl webpage 959 
+Finished with webpage 960 
+Beginning to crawl webpage 960 
+Finished with webpage 961 
+Beginning to crawl webpage 961 
+Finished with webpage 962 
+Beginning to crawl webpage 962 
+Finished with webpage 963 
+Beginning to crawl webpage 963 
+Finished with webpage 964 
+Beginning to crawl webpage 964 
+Finished with webpage 965 
+Beginning to crawl webpage 965 
+Finished with webpage 966 
+Beginning to crawl webpage 966 
+Finished with webpage 967 
+Beginning to crawl webpage 967 
+Finished with webpage 968 
+Beginning to crawl webpage 968 
+Finished with webpage 969 
+Beginning to crawl webpage 969 
+Finished with webpage 970 
+Beginning to crawl webpage 970 
+Finished with webpage 971 
+Beginning to crawl webpage 971 
+Finished with webpage 972 
+Beginning to crawl webpage 972 
+Finished with webpage 973 
+Beginning to crawl webpage 973 
+Finished with webpage 974 
+Beginning to crawl webpage 974 
+Finished with webpage 975 
+Beginning to crawl webpage 975 
+Finished with webpage 976 
+Beginning to crawl webpage 976 
+Finished with webpage 977 
+Beginning to crawl webpage 977 
+Finished with webpage 978 
+Beginning to crawl webpage 978 
+Finished with webpage 979 
+Beginning to crawl webpage 979 
+Finished with webpage 980 
+Beginning to crawl webpage 980 
+Finished with webpage 981 
+Beginning to crawl webpage 981 
+Finished with webpage 982 
+Beginning to crawl webpage 982 
+Finished with webpage 983 
+Beginning to crawl webpage 983 
+Finished with webpage 984 
+Beginning to crawl webpage 984 
+Finished with webpage 985 
+Beginning to crawl webpage 985 
+Finished with webpage 986 
+Beginning to crawl webpage 986 
+Finished with webpage 987 
+Beginning to crawl webpage 987 
+Finished with webpage 988 
+Beginning to crawl webpage 988 
+Finished with webpage 989 
+Beginning to crawl webpage 989 
+Finished with webpage 990 
+Beginning to crawl webpage 990 
+Finished with webpage 991 
+Beginning to crawl webpage 991 
+Finished with webpage 992 
+Beginning to crawl webpage 992 
+Finished with webpage 993 
+Beginning to crawl webpage 993 
+Finished with webpage 994 
+Beginning to crawl webpage 994 
+Finished with webpage 995 
+Beginning to crawl webpage 995 
+Finished with webpage 996 
+Beginning to crawl webpage 996 
+Finished with webpage 997 
+Beginning to crawl webpage 997 
+Finished with webpage 998 
+Beginning to crawl webpage 998 
+Finished with webpage 999 
+Beginning to crawl webpage 999 
+Finished with webpage 1000 
+Beginning to crawl webpage 1000 
+Finished with webpage 1001 
+Beginning to crawl webpage 1001 
+Finished with webpage 1002 
+Beginning to crawl webpage 1002 
+Finished with webpage 1003 
+Beginning to crawl webpage 1003 
+Finished with webpage 1004 
+Beginning to crawl webpage 1004 
+Finished with webpage 1005 
+Beginning to crawl webpage 1005 
+Finished with webpage 1006 
+Beginning to crawl webpage 1006 
+Finished with webpage 1007 
+Beginning to crawl webpage 1007 
+Finished with webpage 1008 
+Beginning to crawl webpage 1008 
+Finished with webpage 1009 
+Beginning to crawl webpage 1009 
+Finished with webpage 1010 
+Beginning to crawl webpage 1010 
+Finished with webpage 1011 
+Beginning to crawl webpage 1011 
+Finished with webpage 1012 
+Beginning to crawl webpage 1012 
+Finished with webpage 1013 
+Beginning to crawl webpage 1013 
+Finished with webpage 1014 
+Beginning to crawl webpage 1014 
+Finished with webpage 1015 
+Beginning to crawl webpage 1015 
+Finished with webpage 1016 
+Beginning to crawl webpage 1016 
+Finished with webpage 1017 
+Beginning to crawl webpage 1017 
+Finished with webpage 1018 
+Beginning to crawl webpage 1018 
+Finished with webpage 1019 
+Beginning to crawl webpage 1019 
+Finished with webpage 1020 
+Beginning to crawl webpage 1020 
+Finished with webpage 1021 
+Beginning to crawl webpage 1021 
+Finished with webpage 1022 
+Beginning to crawl webpage 1022 
+Finished with webpage 1023 
+Beginning to crawl webpage 1023 
+Finished with webpage 1024 
+Beginning to crawl webpage 1024 
+Finished with webpage 1025 
+Beginning to crawl webpage 1025 
+Finished with webpage 1026 
+Beginning to crawl webpage 1026 
+Finished with webpage 1027 
+Beginning to crawl webpage 1027 
+Finished with webpage 1028 
+Beginning to crawl webpage 1028 
+Finished with webpage 1029 
+Beginning to crawl webpage 1029 
+Finished with webpage 1030 
+Beginning to crawl webpage 1030 
+Finished with webpage 1031 
+Beginning to crawl webpage 1031 
+Finished with webpage 1032 
+Beginning to crawl webpage 1032 
+Finished with webpage 1033 
+Beginning to crawl webpage 1033 
+Finished with webpage 1034 
+Beginning to crawl webpage 1034 
+Finished with webpage 1035 
+Beginning to crawl webpage 1035 
+Finished with webpage 1036 
+Beginning to crawl webpage 1036 
+Finished with webpage 1037 
+Beginning to crawl webpage 1037 
+Finished with webpage 1038 
+Beginning to crawl webpage 1038 
+Finished with webpage 1039 
+Beginning to crawl webpage 1039 
+Finished with webpage 1040 
+Beginning to crawl webpage 1040 
+Finished with webpage 1041 
+Beginning to crawl webpage 1041 
+Finished with webpage 1042 
+Beginning to crawl webpage 1042 
+Finished with webpage 1043 
+Beginning to crawl webpage 1043 
+Finished with webpage 1044 
+Beginning to crawl webpage 1044 
+Finished with webpage 1045 
+Beginning to crawl webpage 1045 
+Finished with webpage 1046 
+Beginning to crawl webpage 1046 
+Finished with webpage 1047 
+Beginning to crawl webpage 1047 
+Finished with webpage 1048 
+Beginning to crawl webpage 1048 
+Finished with webpage 1049 
+Beginning to crawl webpage 1049 
+Finished with webpage 1050 
+Beginning to crawl webpage 1050 
+Finished with webpage 1051 
+Beginning to crawl webpage 1051 
+Finished with webpage 1052 
+Beginning to crawl webpage 1052 
+Finished with webpage 1053 
+Beginning to crawl webpage 1053 
+Finished with webpage 1054 
+Beginning to crawl webpage 1054 
+Finished with webpage 1055 
+Beginning to crawl webpage 1055 
+Finished with webpage 1056 
+Beginning to crawl webpage 1056 
+Finished with webpage 1057 
+Beginning to crawl webpage 1057 
+Finished with webpage 1058 
+Beginning to crawl webpage 1058 
+Finished with webpage 1059 
+Beginning to crawl webpage 1059 
+Finished with webpage 1060 
+Beginning to crawl webpage 1060 
+Finished with webpage 1061 
+Beginning to crawl webpage 1061 
+Finished with webpage 1062 
+Beginning to crawl webpage 1062 
+Finished with webpage 1063 
+Beginning to crawl webpage 1063 
+Finished with webpage 1064 
+Beginning to crawl webpage 1064 
+Finished with webpage 1065 
+Beginning to crawl webpage 1065 
+Finished with webpage 1066 
+Beginning to crawl webpage 1066 
+Finished with webpage 1067 
+Beginning to crawl webpage 1067 
+Finished with webpage 1068 
+Beginning to crawl webpage 1068 
+Finished with webpage 1069 
+Beginning to crawl webpage 1069 
+Finished with webpage 1070 
+Beginning to crawl webpage 1070 
+Finished with webpage 1071 
+Beginning to crawl webpage 1071 
+Finished with webpage 1072 
+Beginning to crawl webpage 1072 
+Finished with webpage 1073 
+Beginning to crawl webpage 1073 
+Finished with webpage 1074 
+Beginning to crawl webpage 1074 
+Finished with webpage 1075 
+Beginning to crawl webpage 1075 
+Finished with webpage 1076 
+Beginning to crawl webpage 1076 
+Finished with webpage 1077 
+Beginning to crawl webpage 1077 
+Finished with webpage 1078 
+Beginning to crawl webpage 1078 
+Finished with webpage 1079 
+Beginning to crawl webpage 1079 
+Finished with webpage 1080 
+Beginning to crawl webpage 1080 
+Finished with webpage 1081 
+Beginning to crawl webpage 1081 
+Finished with webpage 1082 
+Beginning to crawl webpage 1082 
+Finished with webpage 1083 
+Beginning to crawl webpage 1083 
+Finished with webpage 1084 
+Beginning to crawl webpage 1084 
+Finished with webpage 1085 
+Beginning to crawl webpage 1085 
+Finished with webpage 1086 
+Beginning to crawl webpage 1086 
+Finished with webpage 1087 
+Beginning to crawl webpage 1087 
+Finished with webpage 1088 
+Beginning to crawl webpage 1088 
+Finished with webpage 1089 
+Beginning to crawl webpage 1089 
+Finished with webpage 1090 
+Beginning to crawl webpage 1090 
+Finished with webpage 1091 
+Beginning to crawl webpage 1091 
+Finished with webpage 1092 
+Beginning to crawl webpage 1092 
+Finished with webpage 1093 
+Beginning to crawl webpage 1093 
+Finished with webpage 1094 
+Beginning to crawl webpage 1094 
+Finished with webpage 1095 
+Beginning to crawl webpage 1095 
+Finished with webpage 1096 
+Beginning to crawl webpage 1096 
+Finished with webpage 1097 
+Beginning to crawl webpage 1097 
+Finished with webpage 1098 
+Beginning to crawl webpage 1098 
+Finished with webpage 1099 
+Beginning to crawl webpage 1099 
+Finished with webpage 1100 
+Beginning to crawl webpage 1100 
+Finished with webpage 1101 
+Beginning to crawl webpage 1101 
+Finished with webpage 1102 
+Beginning to crawl webpage 1102 
+Finished with webpage 1103 
+Beginning to crawl webpage 1103 
+Finished with webpage 1104 
+Beginning to crawl webpage 1104 
+Finished with webpage 1105 
+Beginning to crawl webpage 1105 
+Finished with webpage 1106 
+Beginning to crawl webpage 1106 
+Finished with webpage 1107 
+Beginning to crawl webpage 1107 
+Finished with webpage 1108 
+Beginning to crawl webpage 1108 
+Finished with webpage 1109 
+Beginning to crawl webpage 1109 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/O%27Reilly_Media.html could not be extracted. 
+Beginning to crawl webpage 1109 
+Finished with webpage 1110 
+Beginning to crawl webpage 1110 
+Finished with webpage 1111 
+Beginning to crawl webpage 1111 
+Finished with webpage 1112 
+Beginning to crawl webpage 1112 
+Finished with webpage 1113 
+Beginning to crawl webpage 1113 
+Finished with webpage 1114 
+Beginning to crawl webpage 1114 
+Finished with webpage 1115 
+Beginning to crawl webpage 1115 
+Finished with webpage 1116 
+Beginning to crawl webpage 1116 
+Finished with webpage 1117 
+Beginning to crawl webpage 1117 
+Finished with webpage 1118 
+Beginning to crawl webpage 1118 
+Finished with webpage 1119 
+Beginning to crawl webpage 1119 
+Finished with webpage 1120 
+Beginning to crawl webpage 1120 
+Finished with webpage 1121 
+Beginning to crawl webpage 1121 
+Finished with webpage 1122 
+Beginning to crawl webpage 1122 
+Finished with webpage 1123 
+Beginning to crawl webpage 1123 
+Finished with webpage 1124 
+Beginning to crawl webpage 1124 
+Finished with webpage 1125 
+Beginning to crawl webpage 1125 
+Finished with webpage 1126 
+Beginning to crawl webpage 1126 
+Finished with webpage 1127 
+Beginning to crawl webpage 1127 
+Finished with webpage 1128 
+Beginning to crawl webpage 1128 
+Finished with webpage 1129 
+Beginning to crawl webpage 1129 
+Finished with webpage 1130 
+Beginning to crawl webpage 1130 
+Finished with webpage 1131 
+Beginning to crawl webpage 1131 
+Finished with webpage 1132 
+Beginning to crawl webpage 1132 
+Finished with webpage 1133 
+Beginning to crawl webpage 1133 
+Finished with webpage 1134 
+Beginning to crawl webpage 1134 
+Finished with webpage 1135 
+Beginning to crawl webpage 1135 
+Finished with webpage 1136 
+Beginning to crawl webpage 1136 
+Finished with webpage 1137 
+Beginning to crawl webpage 1137 
+Finished with webpage 1138 
+Beginning to crawl webpage 1138 
+Finished with webpage 1139 
+Beginning to crawl webpage 1139 
+Finished with webpage 1140 
+Beginning to crawl webpage 1140 
+Finished with webpage 1141 
+Beginning to crawl webpage 1141 
+Finished with webpage 1142 
+Beginning to crawl webpage 1142 
+Finished with webpage 1143 
+Beginning to crawl webpage 1143 
+Finished with webpage 1144 
+Beginning to crawl webpage 1144 
+Finished with webpage 1145 
+Beginning to crawl webpage 1145 
+Finished with webpage 1146 
+Beginning to crawl webpage 1146 
+Finished with webpage 1147 
+Beginning to crawl webpage 1147 
+Finished with webpage 1148 
+Beginning to crawl webpage 1148 
+Finished with webpage 1149 
+Beginning to crawl webpage 1149 
+Finished with webpage 1150 
+Beginning to crawl webpage 1150 
+Finished with webpage 1151 
+Beginning to crawl webpage 1151 
+Finished with webpage 1152 
+Beginning to crawl webpage 1152 
+Finished with webpage 1153 
+Beginning to crawl webpage 1153 
+Finished with webpage 1154 
+Beginning to crawl webpage 1154 
+Finished with webpage 1155 
+Beginning to crawl webpage 1155 
+Finished with webpage 1156 
+Beginning to crawl webpage 1156 
+Finished with webpage 1157 
+Beginning to crawl webpage 1157 
+Finished with webpage 1158 
+Beginning to crawl webpage 1158 
+Finished with webpage 1159 
+Beginning to crawl webpage 1159 
+Finished with webpage 1160 
+Beginning to crawl webpage 1160 
+Finished with webpage 1161 
+Beginning to crawl webpage 1161 
+Finished with webpage 1162 
+Beginning to crawl webpage 1162 
+Finished with webpage 1163 
+Beginning to crawl webpage 1163 
+Finished with webpage 1164 
+Beginning to crawl webpage 1164 
+Finished with webpage 1165 
+Beginning to crawl webpage 1165 
+Finished with webpage 1166 
+Beginning to crawl webpage 1166 
+Finished with webpage 1167 
+Beginning to crawl webpage 1167 
+Finished with webpage 1168 
+Beginning to crawl webpage 1168 
+Finished with webpage 1169 
+Beginning to crawl webpage 1169 
+Finished with webpage 1170 
+Beginning to crawl webpage 1170 
+Finished with webpage 1171 
+Beginning to crawl webpage 1171 
+Finished with webpage 1172 
+Beginning to crawl webpage 1172 
+Finished with webpage 1173 
+Beginning to crawl webpage 1173 
+Finished with webpage 1174 
+Beginning to crawl webpage 1174 
+Finished with webpage 1175 
+Beginning to crawl webpage 1175 
+Finished with webpage 1176 
+Beginning to crawl webpage 1176 
+Finished with webpage 1177 
+Beginning to crawl webpage 1177 
+Finished with webpage 1178 
+Beginning to crawl webpage 1178 
+Finished with webpage 1179 
+Beginning to crawl webpage 1179 
+Finished with webpage 1180 
+Beginning to crawl webpage 1180 
+Finished with webpage 1181 
+Beginning to crawl webpage 1181 
+Finished with webpage 1182 
+Beginning to crawl webpage 1182 
+Finished with webpage 1183 
+Beginning to crawl webpage 1183 
+Finished with webpage 1184 
+Beginning to crawl webpage 1184 
+Finished with webpage 1185 
+Beginning to crawl webpage 1185 
+Finished with webpage 1186 
+Beginning to crawl webpage 1186 
+Finished with webpage 1187 
+Beginning to crawl webpage 1187 
+Finished with webpage 1188 
+Beginning to crawl webpage 1188 
+Finished with webpage 1189 
+Beginning to crawl webpage 1189 
+Finished with webpage 1190 
+Beginning to crawl webpage 1190 
+Finished with webpage 1191 
+Beginning to crawl webpage 1191 
+Finished with webpage 1192 
+Beginning to crawl webpage 1192 
+Finished with webpage 1193 
+Beginning to crawl webpage 1193 
+Finished with webpage 1194 
+Beginning to crawl webpage 1194 
+Finished with webpage 1195 
+Beginning to crawl webpage 1195 
+Finished with webpage 1196 
+Beginning to crawl webpage 1196 
+Finished with webpage 1197 
+Beginning to crawl webpage 1197 
+Finished with webpage 1198 
+Beginning to crawl webpage 1198 
+Finished with webpage 1199 
+Beginning to crawl webpage 1199 
+Finished with webpage 1200 
+Beginning to crawl webpage 1200 
+Finished with webpage 1201 
+Beginning to crawl webpage 1201 
+Finished with webpage 1202 
+Beginning to crawl webpage 1202 
+Finished with webpage 1203 
+Beginning to crawl webpage 1203 
+Finished with webpage 1204 
+Beginning to crawl webpage 1204 
+Finished with webpage 1205 
+Beginning to crawl webpage 1205 
+Finished with webpage 1206 
+Beginning to crawl webpage 1206 
+Finished with webpage 1207 
+Beginning to crawl webpage 1207 
+Finished with webpage 1208 
+Beginning to crawl webpage 1208 
+Finished with webpage 1209 
+Beginning to crawl webpage 1209 
+Finished with webpage 1210 
+Beginning to crawl webpage 1210 
+Finished with webpage 1211 
+Beginning to crawl webpage 1211 
+Finished with webpage 1212 
+Beginning to crawl webpage 1212 
+Finished with webpage 1213 
+Beginning to crawl webpage 1213 
+Finished with webpage 1214 
+Beginning to crawl webpage 1214 
+Finished with webpage 1215 
+Beginning to crawl webpage 1215 
+Finished with webpage 1216 
+Beginning to crawl webpage 1216 
+Finished with webpage 1217 
+Beginning to crawl webpage 1217 
+Finished with webpage 1218 
+Beginning to crawl webpage 1218 
+Finished with webpage 1219 
+Beginning to crawl webpage 1219 
+Finished with webpage 1220 
+Beginning to crawl webpage 1220 
+Finished with webpage 1221 
+Beginning to crawl webpage 1221 
+Finished with webpage 1222 
+Beginning to crawl webpage 1222 
+Finished with webpage 1223 
+Beginning to crawl webpage 1223 
+Finished with webpage 1224 
+Beginning to crawl webpage 1224 
+Finished with webpage 1225 
+Beginning to crawl webpage 1225 
+Finished with webpage 1226 
+Beginning to crawl webpage 1226 
+Finished with webpage 1227 
+Beginning to crawl webpage 1227 
+Finished with webpage 1228 
+Beginning to crawl webpage 1228 
+Finished with webpage 1229 
+Beginning to crawl webpage 1229 
+Finished with webpage 1230 
+Beginning to crawl webpage 1230 
+Finished with webpage 1231 
+Beginning to crawl webpage 1231 
+Finished with webpage 1232 
+Beginning to crawl webpage 1232 
+Finished with webpage 1233 
+Beginning to crawl webpage 1233 
+Finished with webpage 1234 
+Beginning to crawl webpage 1234 
+Finished with webpage 1235 
+Beginning to crawl webpage 1235 
+Finished with webpage 1236 
+Beginning to crawl webpage 1236 
+Finished with webpage 1237 
+Beginning to crawl webpage 1237 
+Finished with webpage 1238 
+Beginning to crawl webpage 1238 
+Finished with webpage 1239 
+Beginning to crawl webpage 1239 
+Finished with webpage 1240 
+Beginning to crawl webpage 1240 
+Finished with webpage 1241 
+Beginning to crawl webpage 1241 
+Finished with webpage 1242 
+Beginning to crawl webpage 1242 
+Finished with webpage 1243 
+Beginning to crawl webpage 1243 
+Finished with webpage 1244 
+Beginning to crawl webpage 1244 
+Finished with webpage 1245 
+Beginning to crawl webpage 1245 
+Finished with webpage 1246 
+Beginning to crawl webpage 1246 
+Finished with webpage 1247 
+Beginning to crawl webpage 1247 
+Finished with webpage 1248 
+Beginning to crawl webpage 1248 
+Finished with webpage 1249 
+Beginning to crawl webpage 1249 
+Finished with webpage 1250 
+Beginning to crawl webpage 1250 
+Finished with webpage 1251 
+Beginning to crawl webpage 1251 
+Finished with webpage 1252 
+Beginning to crawl webpage 1252 
+Finished with webpage 1253 
+Beginning to crawl webpage 1253 
+Finished with webpage 1254 
+Beginning to crawl webpage 1254 
+Finished with webpage 1255 
+Beginning to crawl webpage 1255 
+Finished with webpage 1256 
+Beginning to crawl webpage 1256 
+Finished with webpage 1257 
+Beginning to crawl webpage 1257 
+Finished with webpage 1258 
+Beginning to crawl webpage 1258 
+Finished with webpage 1259 
+Beginning to crawl webpage 1259 
+Finished with webpage 1260 
+Beginning to crawl webpage 1260 
+Finished with webpage 1261 
+Beginning to crawl webpage 1261 
+Finished with webpage 1262 
+Beginning to crawl webpage 1262 
+Finished with webpage 1263 
+Beginning to crawl webpage 1263 
+Finished with webpage 1264 
+Beginning to crawl webpage 1264 
+Finished with webpage 1265 
+Beginning to crawl webpage 1265 
+Finished with webpage 1266 
+Beginning to crawl webpage 1266 
+Finished with webpage 1267 
+Beginning to crawl webpage 1267 
+Finished with webpage 1268 
+Beginning to crawl webpage 1268 
+Finished with webpage 1269 
+Beginning to crawl webpage 1269 
+Finished with webpage 1270 
+Beginning to crawl webpage 1270 
+Finished with webpage 1271 
+Beginning to crawl webpage 1271 
+Finished with webpage 1272 
+Beginning to crawl webpage 1272 
+Finished with webpage 1273 
+Beginning to crawl webpage 1273 
+Finished with webpage 1274 
+Beginning to crawl webpage 1274 
+Finished with webpage 1275 
+Beginning to crawl webpage 1275 
+Finished with webpage 1276 
+Beginning to crawl webpage 1276 
+Finished with webpage 1277 
+Beginning to crawl webpage 1277 
+Finished with webpage 1278 
+Beginning to crawl webpage 1278 
+Finished with webpage 1279 
+Beginning to crawl webpage 1279 
+Finished with webpage 1280 
+Beginning to crawl webpage 1280 
+Finished with webpage 1281 
+Beginning to crawl webpage 1281 
+Finished with webpage 1282 
+Beginning to crawl webpage 1282 
+Finished with webpage 1283 
+Beginning to crawl webpage 1283 
+Finished with webpage 1284 
+Beginning to crawl webpage 1284 
+Finished with webpage 1285 
+Beginning to crawl webpage 1285 
+Finished with webpage 1286 
+Beginning to crawl webpage 1286 
+Finished with webpage 1287 
+Beginning to crawl webpage 1287 
+Finished with webpage 1288 
+Beginning to crawl webpage 1288 
+Finished with webpage 1289 
+Beginning to crawl webpage 1289 
+Finished with webpage 1290 
+Beginning to crawl webpage 1290 
+Finished with webpage 1291 
+Beginning to crawl webpage 1291 
+Finished with webpage 1292 
+Beginning to crawl webpage 1292 
+Finished with webpage 1293 
+Beginning to crawl webpage 1293 
+Finished with webpage 1294 
+Beginning to crawl webpage 1294 
+Finished with webpage 1295 
+Beginning to crawl webpage 1295 
+Finished with webpage 1296 
+Beginning to crawl webpage 1296 
+Finished with webpage 1297 
+Beginning to crawl webpage 1297 
+Finished with webpage 1298 
+Beginning to crawl webpage 1298 
+Finished with webpage 1299 
+Beginning to crawl webpage 1299 
+Finished with webpage 1300 
+Beginning to crawl webpage 1300 
+Finished with webpage 1301 
+Beginning to crawl webpage 1301 
+Finished with webpage 1302 
+Beginning to crawl webpage 1302 
+Finished with webpage 1303 
+Beginning to crawl webpage 1303 
+Finished with webpage 1304 
+Beginning to crawl webpage 1304 
+Finished with webpage 1305 
+Beginning to crawl webpage 1305 
+Finished with webpage 1306 
+Beginning to crawl webpage 1306 
+Finished with webpage 1307 
+Beginning to crawl webpage 1307 
+Finished with webpage 1308 
+Beginning to crawl webpage 1308 
+Finished with webpage 1309 
+Beginning to crawl webpage 1309 
+Finished with webpage 1310 
+Beginning to crawl webpage 1310 
+Finished with webpage 1311 
+Beginning to crawl webpage 1311 
+Finished with webpage 1312 
+Beginning to crawl webpage 1312 
+Finished with webpage 1313 
+Beginning to crawl webpage 1313 
+Finished with webpage 1314 
+Beginning to crawl webpage 1314 
+Finished with webpage 1315 
+Beginning to crawl webpage 1315 
+Finished with webpage 1316 
+Beginning to crawl webpage 1316 
+Finished with webpage 1317 
+Beginning to crawl webpage 1317 
+Finished with webpage 1318 
+Beginning to crawl webpage 1318 
+Finished with webpage 1319 
+Beginning to crawl webpage 1319 
+Finished with webpage 1320 
+Beginning to crawl webpage 1320 
+Finished with webpage 1321 
+Beginning to crawl webpage 1321 
+Finished with webpage 1322 
+Beginning to crawl webpage 1322 
+Finished with webpage 1323 
+Beginning to crawl webpage 1323 
+Finished with webpage 1324 
+Beginning to crawl webpage 1324 
+Finished with webpage 1325 
+Beginning to crawl webpage 1325 
+Finished with webpage 1326 
+Beginning to crawl webpage 1326 
+Finished with webpage 1327 
+Beginning to crawl webpage 1327 
+Finished with webpage 1328 
+Beginning to crawl webpage 1328 
+Finished with webpage 1329 
+Beginning to crawl webpage 1329 
+Finished with webpage 1330 
+Beginning to crawl webpage 1330 
+Finished with webpage 1331 
+Beginning to crawl webpage 1331 
+Finished with webpage 1332 
+Beginning to crawl webpage 1332 
+Finished with webpage 1333 
+Beginning to crawl webpage 1333 
+Finished with webpage 1334 
+Beginning to crawl webpage 1334 
+Finished with webpage 1335 
+Beginning to crawl webpage 1335 
+Finished with webpage 1336 
+Beginning to crawl webpage 1336 
+Finished with webpage 1337 
+Beginning to crawl webpage 1337 
+Finished with webpage 1338 
+Beginning to crawl webpage 1338 
+Finished with webpage 1339 
+Beginning to crawl webpage 1339 
+Finished with webpage 1340 
+Beginning to crawl webpage 1340 
+Finished with webpage 1341 
+Beginning to crawl webpage 1341 
+Finished with webpage 1342 
+Beginning to crawl webpage 1342 
+Finished with webpage 1343 
+Beginning to crawl webpage 1343 
+Finished with webpage 1344 
+Beginning to crawl webpage 1344 
+Finished with webpage 1345 
+Beginning to crawl webpage 1345 
+Finished with webpage 1346 
+Beginning to crawl webpage 1346 
+Finished with webpage 1347 
+Beginning to crawl webpage 1347 
+Finished with webpage 1348 
+Beginning to crawl webpage 1348 
+Finished with webpage 1349 
+Beginning to crawl webpage 1349 
+Finished with webpage 1350 
+Beginning to crawl webpage 1350 
+Finished with webpage 1351 
+Beginning to crawl webpage 1351 
+Finished with webpage 1352 
+Beginning to crawl webpage 1352 
+Finished with webpage 1353 
+Beginning to crawl webpage 1353 
+Finished with webpage 1354 
+Beginning to crawl webpage 1354 
+Finished with webpage 1355 
+Beginning to crawl webpage 1355 
+Finished with webpage 1356 
+Beginning to crawl webpage 1356 
+Finished with webpage 1357 
+Beginning to crawl webpage 1357 
+Finished with webpage 1358 
+Beginning to crawl webpage 1358 
+Finished with webpage 1359 
+Beginning to crawl webpage 1359 
+Finished with webpage 1360 
+Beginning to crawl webpage 1360 
+Finished with webpage 1361 
+Beginning to crawl webpage 1361 
+Finished with webpage 1362 
+Beginning to crawl webpage 1362 
+Finished with webpage 1363 
+Beginning to crawl webpage 1363 
+Finished with webpage 1364 
+Beginning to crawl webpage 1364 
+Finished with webpage 1365 
+Beginning to crawl webpage 1365 
+Finished with webpage 1366 
+Beginning to crawl webpage 1366 
+Finished with webpage 1367 
+Beginning to crawl webpage 1367 
+Finished with webpage 1368 
+Beginning to crawl webpage 1368 
+Finished with webpage 1369 
+Beginning to crawl webpage 1369 
+Finished with webpage 1370 
+Beginning to crawl webpage 1370 
+Finished with webpage 1371 
+Beginning to crawl webpage 1371 
+Finished with webpage 1372 
+Beginning to crawl webpage 1372 
+Finished with webpage 1373 
+Beginning to crawl webpage 1373 
+Finished with webpage 1374 
+Beginning to crawl webpage 1374 
+Finished with webpage 1375 
+Beginning to crawl webpage 1375 
+Finished with webpage 1376 
+Beginning to crawl webpage 1376 
+Finished with webpage 1377 
+Beginning to crawl webpage 1377 
+Finished with webpage 1378 
+Beginning to crawl webpage 1378 
+Finished with webpage 1379 
+Beginning to crawl webpage 1379 
+Finished with webpage 1380 
+Beginning to crawl webpage 1380 
+Finished with webpage 1381 
+Beginning to crawl webpage 1381 
+Finished with webpage 1382 
+Beginning to crawl webpage 1382 
+Finished with webpage 1383 
+Beginning to crawl webpage 1383 
+Finished with webpage 1384 
+Beginning to crawl webpage 1384 
+Finished with webpage 1385 
+Beginning to crawl webpage 1385 
+Finished with webpage 1386 
+Beginning to crawl webpage 1386 
+Finished with webpage 1387 
+Beginning to crawl webpage 1387 
+Finished with webpage 1388 
+Beginning to crawl webpage 1388 
+Finished with webpage 1389 
+Beginning to crawl webpage 1389 
+Finished with webpage 1390 
+Beginning to crawl webpage 1390 
+Finished with webpage 1391 
+Beginning to crawl webpage 1391 
+Finished with webpage 1392 
+Beginning to crawl webpage 1392 
+Finished with webpage 1393 
+Beginning to crawl webpage 1393 
+Finished with webpage 1394 
+Beginning to crawl webpage 1394 
+Finished with webpage 1395 
+Beginning to crawl webpage 1395 
+Finished with webpage 1396 
+Beginning to crawl webpage 1396 
+Finished with webpage 1397 
+Beginning to crawl webpage 1397 
+Finished with webpage 1398 
+Beginning to crawl webpage 1398 
+Finished with webpage 1399 
+Beginning to crawl webpage 1399 
+Finished with webpage 1400 
+Beginning to crawl webpage 1400 
+Finished with webpage 1401 
+Beginning to crawl webpage 1401 
+Finished with webpage 1402 
+Beginning to crawl webpage 1402 
+Finished with webpage 1403 
+Beginning to crawl webpage 1403 
+Finished with webpage 1404 
+Beginning to crawl webpage 1404 
+Finished with webpage 1405 
+Beginning to crawl webpage 1405 
+Finished with webpage 1406 
+Beginning to crawl webpage 1406 
+Finished with webpage 1407 
+Beginning to crawl webpage 1407 
+Finished with webpage 1408 
+Beginning to crawl webpage 1408 
+Finished with webpage 1409 
+Beginning to crawl webpage 1409 
+Finished with webpage 1410 
+Beginning to crawl webpage 1410 
+Finished with webpage 1411 
+Beginning to crawl webpage 1411 
+Finished with webpage 1412 
+Beginning to crawl webpage 1412 
+Finished with webpage 1413 
+Beginning to crawl webpage 1413 
+Finished with webpage 1414 
+Beginning to crawl webpage 1414 
+Finished with webpage 1415 
+Beginning to crawl webpage 1415 
+Finished with webpage 1416 
+Beginning to crawl webpage 1416 
+Finished with webpage 1417 
+Beginning to crawl webpage 1417 
+Finished with webpage 1418 
+Beginning to crawl webpage 1418 
+Finished with webpage 1419 
+Beginning to crawl webpage 1419 
+Finished with webpage 1420 
+Beginning to crawl webpage 1420 
+Finished with webpage 1421 
+Beginning to crawl webpage 1421 
+Finished with webpage 1422 
+Beginning to crawl webpage 1422 
+Finished with webpage 1423 
+Beginning to crawl webpage 1423 
+Finished with webpage 1424 
+Beginning to crawl webpage 1424 
+Finished with webpage 1425 
+Beginning to crawl webpage 1425 
+Finished with webpage 1426 
+Beginning to crawl webpage 1426 
+Finished with webpage 1427 
+Beginning to crawl webpage 1427 
+Finished with webpage 1428 
+Beginning to crawl webpage 1428 
+Finished with webpage 1429 
+Beginning to crawl webpage 1429 
+Finished with webpage 1430 
+Beginning to crawl webpage 1430 
+Finished with webpage 1431 
+Beginning to crawl webpage 1431 
+Finished with webpage 1432 
+Beginning to crawl webpage 1432 
+Finished with webpage 1433 
+Beginning to crawl webpage 1433 
+Finished with webpage 1434 
+Beginning to crawl webpage 1434 
+Finished with webpage 1435 
+Beginning to crawl webpage 1435 
+Finished with webpage 1436 
+Beginning to crawl webpage 1436 
+Finished with webpage 1437 
+Beginning to crawl webpage 1437 
+Finished with webpage 1438 
+Beginning to crawl webpage 1438 
+Finished with webpage 1439 
+Beginning to crawl webpage 1439 
+Finished with webpage 1440 
+Beginning to crawl webpage 1440 
+Finished with webpage 1441 
+Beginning to crawl webpage 1441 
+Finished with webpage 1442 
+Beginning to crawl webpage 1442 
+Finished with webpage 1443 
+Beginning to crawl webpage 1443 
+Finished with webpage 1444 
+Beginning to crawl webpage 1444 
+Finished with webpage 1445 
+Beginning to crawl webpage 1445 
+Finished with webpage 1446 
+Beginning to crawl webpage 1446 
+Finished with webpage 1447 
+Beginning to crawl webpage 1447 
+Finished with webpage 1448 
+Beginning to crawl webpage 1448 
+Finished with webpage 1449 
+Beginning to crawl webpage 1449 
+Finished with webpage 1450 
+Beginning to crawl webpage 1450 
+Finished with webpage 1451 
+Beginning to crawl webpage 1451 
+Finished with webpage 1452 
+Beginning to crawl webpage 1452 
+Finished with webpage 1453 
+Beginning to crawl webpage 1453 
+Finished with webpage 1454 
+Beginning to crawl webpage 1454 
+Finished with webpage 1455 
+Beginning to crawl webpage 1455 
+Finished with webpage 1456 
+Beginning to crawl webpage 1456 
+Finished with webpage 1457 
+Beginning to crawl webpage 1457 
+Finished with webpage 1458 
+Beginning to crawl webpage 1458 
+Finished with webpage 1459 
+Beginning to crawl webpage 1459 
+Finished with webpage 1460 
+Beginning to crawl webpage 1460 
+Finished with webpage 1461 
+Beginning to crawl webpage 1461 
+Finished with webpage 1462 
+Beginning to crawl webpage 1462 
+Finished with webpage 1463 
+Beginning to crawl webpage 1463 
+Finished with webpage 1464 
+Beginning to crawl webpage 1464 
+Finished with webpage 1465 
+Beginning to crawl webpage 1465 
+Finished with webpage 1466 
+Beginning to crawl webpage 1466 
+Finished with webpage 1467 
+Beginning to crawl webpage 1467 
+Finished with webpage 1468 
+Beginning to crawl webpage 1468 
+Finished with webpage 1469 
+Beginning to crawl webpage 1469 
+Finished with webpage 1470 
+Beginning to crawl webpage 1470 
+Finished with webpage 1471 
+Beginning to crawl webpage 1471 
+Finished with webpage 1472 
+Beginning to crawl webpage 1472 
+Finished with webpage 1473 
+Beginning to crawl webpage 1473 
+Finished with webpage 1474 
+Beginning to crawl webpage 1474 
+Finished with webpage 1475 
+Beginning to crawl webpage 1475 
+Finished with webpage 1476 
+Beginning to crawl webpage 1476 
+Finished with webpage 1477 
+Beginning to crawl webpage 1477 
+Finished with webpage 1478 
+Beginning to crawl webpage 1478 
+Finished with webpage 1479 
+Beginning to crawl webpage 1479 
+Finished with webpage 1480 
+Beginning to crawl webpage 1480 
+Finished with webpage 1481 
+Beginning to crawl webpage 1481 
+Finished with webpage 1482 
+Beginning to crawl webpage 1482 
+Finished with webpage 1483 
+Beginning to crawl webpage 1483 
+Finished with webpage 1484 
+Beginning to crawl webpage 1484 
+Finished with webpage 1485 
+Beginning to crawl webpage 1485 
+Finished with webpage 1486 
+Beginning to crawl webpage 1486 
+Finished with webpage 1487 
+Beginning to crawl webpage 1487 
+Finished with webpage 1488 
+Beginning to crawl webpage 1488 
+Finished with webpage 1489 
+Beginning to crawl webpage 1489 
+Finished with webpage 1490 
+Beginning to crawl webpage 1490 
+Finished with webpage 1491 
+Beginning to crawl webpage 1491 
+Finished with webpage 1492 
+Beginning to crawl webpage 1492 
+Finished with webpage 1493 
+Beginning to crawl webpage 1493 
+Finished with webpage 1494 
+Beginning to crawl webpage 1494 
+Finished with webpage 1495 
+Beginning to crawl webpage 1495 
+Finished with webpage 1496 
+Beginning to crawl webpage 1496 
+Finished with webpage 1497 
+Beginning to crawl webpage 1497 
+Finished with webpage 1498 
+Beginning to crawl webpage 1498 
+Finished with webpage 1499 
+Beginning to crawl webpage 1499 
+Finished with webpage 1500 
+Beginning to crawl webpage 1500 
+Finished with webpage 1501 
+Beginning to crawl webpage 1501 
+Finished with webpage 1502 
+Beginning to crawl webpage 1502 
+Finished with webpage 1503 
+Beginning to crawl webpage 1503 
+Finished with webpage 1504 
+Beginning to crawl webpage 1504 
+Finished with webpage 1505 
+Beginning to crawl webpage 1505 
+Finished with webpage 1506 
+Beginning to crawl webpage 1506 
+Finished with webpage 1507 
+Beginning to crawl webpage 1507 
+Finished with webpage 1508 
+Beginning to crawl webpage 1508 
+Finished with webpage 1509 
+Beginning to crawl webpage 1509 
+Finished with webpage 1510 
+Beginning to crawl webpage 1510 
+Finished with webpage 1511 
+Beginning to crawl webpage 1511 
+Finished with webpage 1512 
+Beginning to crawl webpage 1512 
+Finished with webpage 1513 
+Beginning to crawl webpage 1513 
+Finished with webpage 1514 
+Beginning to crawl webpage 1514 
+Finished with webpage 1515 
+Beginning to crawl webpage 1515 
+Finished with webpage 1516 
+Beginning to crawl webpage 1516 
+Finished with webpage 1517 
+Beginning to crawl webpage 1517 
+Finished with webpage 1518 
+Beginning to crawl webpage 1518 
+Finished with webpage 1519 
+Beginning to crawl webpage 1519 
+Finished with webpage 1520 
+Beginning to crawl webpage 1520 
+Finished with webpage 1521 
+Beginning to crawl webpage 1521 
+Finished with webpage 1522 
+Beginning to crawl webpage 1522 
+Finished with webpage 1523 
+Beginning to crawl webpage 1523 
+Finished with webpage 1524 
+Beginning to crawl webpage 1524 
+Finished with webpage 1525 
+Beginning to crawl webpage 1525 
+Finished with webpage 1526 
+Beginning to crawl webpage 1526 
+Finished with webpage 1527 
+Beginning to crawl webpage 1527 
+Finished with webpage 1528 
+Beginning to crawl webpage 1528 
+Finished with webpage 1529 
+Beginning to crawl webpage 1529 
+Finished with webpage 1530 
+Beginning to crawl webpage 1530 
+Finished with webpage 1531 
+Beginning to crawl webpage 1531 
+Finished with webpage 1532 
+Beginning to crawl webpage 1532 
+Finished with webpage 1533 
+Beginning to crawl webpage 1533 
+Finished with webpage 1534 
+Beginning to crawl webpage 1534 
+Finished with webpage 1535 
+Beginning to crawl webpage 1535 
+Finished with webpage 1536 
+Beginning to crawl webpage 1536 
+Finished with webpage 1537 
+Beginning to crawl webpage 1537 
+Finished with webpage 1538 
+Beginning to crawl webpage 1538 
+Finished with webpage 1539 
+Beginning to crawl webpage 1539 
+Finished with webpage 1540 
+Beginning to crawl webpage 1540 
+Finished with webpage 1541 
+Beginning to crawl webpage 1541 
+Finished with webpage 1542 
+Beginning to crawl webpage 1542 
+Finished with webpage 1543 
+Beginning to crawl webpage 1543 
+Finished with webpage 1544 
+Beginning to crawl webpage 1544 
+Finished with webpage 1545 
+Beginning to crawl webpage 1545 
+Finished with webpage 1546 
+Beginning to crawl webpage 1546 
+Finished with webpage 1547 
+Beginning to crawl webpage 1547 
+Finished with webpage 1548 
+Beginning to crawl webpage 1548 
+Finished with webpage 1549 
+Beginning to crawl webpage 1549 
+Finished with webpage 1550 
+Beginning to crawl webpage 1550 
+Finished with webpage 1551 
+Beginning to crawl webpage 1551 
+Finished with webpage 1552 
+Beginning to crawl webpage 1552 
+Finished with webpage 1553 
+Beginning to crawl webpage 1553 
+Finished with webpage 1554 
+Beginning to crawl webpage 1554 
+Finished with webpage 1555 
+Beginning to crawl webpage 1555 
+Finished with webpage 1556 
+Beginning to crawl webpage 1556 
+Finished with webpage 1557 
+Beginning to crawl webpage 1557 
+Finished with webpage 1558 
+Beginning to crawl webpage 1558 
+Finished with webpage 1559 
+Beginning to crawl webpage 1559 
+Finished with webpage 1560 
+Beginning to crawl webpage 1560 
+Finished with webpage 1561 
+Beginning to crawl webpage 1561 
+Finished with webpage 1562 
+Beginning to crawl webpage 1562 
+Finished with webpage 1563 
+Beginning to crawl webpage 1563 
+Finished with webpage 1564 
+Beginning to crawl webpage 1564 
+Finished with webpage 1565 
+Beginning to crawl webpage 1565 
+Finished with webpage 1566 
+Beginning to crawl webpage 1566 
+Finished with webpage 1567 
+Beginning to crawl webpage 1567 
+Finished with webpage 1568 
+Beginning to crawl webpage 1568 
+Finished with webpage 1569 
+Beginning to crawl webpage 1569 
+Finished with webpage 1570 
+Beginning to crawl webpage 1570 
+Finished with webpage 1571 
+Beginning to crawl webpage 1571 
+Finished with webpage 1572 
+Beginning to crawl webpage 1572 
+Finished with webpage 1573 
+Beginning to crawl webpage 1573 
+Finished with webpage 1574 
+Beginning to crawl webpage 1574 
+Finished with webpage 1575 
+Beginning to crawl webpage 1575 
+Finished with webpage 1576 
+Beginning to crawl webpage 1576 
+Finished with webpage 1577 
+Beginning to crawl webpage 1577 
+Finished with webpage 1578 
+Beginning to crawl webpage 1578 
+Finished with webpage 1579 
+Beginning to crawl webpage 1579 
+Finished with webpage 1580 
+Beginning to crawl webpage 1580 
+Finished with webpage 1581 
+Beginning to crawl webpage 1581 
+Finished with webpage 1582 
+Beginning to crawl webpage 1582 
+Finished with webpage 1583 
+Beginning to crawl webpage 1583 
+Finished with webpage 1584 
+Beginning to crawl webpage 1584 
+Finished with webpage 1585 
+Beginning to crawl webpage 1585 
+Finished with webpage 1586 
+Beginning to crawl webpage 1586 
+Finished with webpage 1587 
+Beginning to crawl webpage 1587 
+Finished with webpage 1588 
+Beginning to crawl webpage 1588 
+Finished with webpage 1589 
+Beginning to crawl webpage 1589 
+Finished with webpage 1590 
+Beginning to crawl webpage 1590 
+Finished with webpage 1591 
+Beginning to crawl webpage 1591 
+Finished with webpage 1592 
+Beginning to crawl webpage 1592 
+Finished with webpage 1593 
+Beginning to crawl webpage 1593 
+Finished with webpage 1594 
+Beginning to crawl webpage 1594 
+Finished with webpage 1595 
+Beginning to crawl webpage 1595 
+Finished with webpage 1596 
+Beginning to crawl webpage 1596 
+Finished with webpage 1597 
+Beginning to crawl webpage 1597 
+Finished with webpage 1598 
+Beginning to crawl webpage 1598 
+Finished with webpage 1599 
+Beginning to crawl webpage 1599 
+Finished with webpage 1600 
+Beginning to crawl webpage 1600 
+Finished with webpage 1601 
+Beginning to crawl webpage 1601 
+Finished with webpage 1602 
+Beginning to crawl webpage 1602 
+Finished with webpage 1603 
+Beginning to crawl webpage 1603 
+Finished with webpage 1604 
+Beginning to crawl webpage 1604 
+Finished with webpage 1605 
+Beginning to crawl webpage 1605 
+Finished with webpage 1606 
+Beginning to crawl webpage 1606 
+Finished with webpage 1607 
+Beginning to crawl webpage 1607 
+Finished with webpage 1608 
+Beginning to crawl webpage 1608 
+Finished with webpage 1609 
+Beginning to crawl webpage 1609 
+Finished with webpage 1610 
+Beginning to crawl webpage 1610 
+Finished with webpage 1611 
+Beginning to crawl webpage 1611 
+Finished with webpage 1612 
+Beginning to crawl webpage 1612 
+Finished with webpage 1613 
+Beginning to crawl webpage 1613 
+Finished with webpage 1614 
+Beginning to crawl webpage 1614 
+Finished with webpage 1615 
+Beginning to crawl webpage 1615 
+Finished with webpage 1616 
+Beginning to crawl webpage 1616 
+Finished with webpage 1617 
+Beginning to crawl webpage 1617 
+Finished with webpage 1618 
+Beginning to crawl webpage 1618 
+Finished with webpage 1619 
+Beginning to crawl webpage 1619 
+Finished with webpage 1620 
+Beginning to crawl webpage 1620 
+Finished with webpage 1621 
+Beginning to crawl webpage 1621 
+Finished with webpage 1622 
+Beginning to crawl webpage 1622 
+Finished with webpage 1623 
+Beginning to crawl webpage 1623 
+Finished with webpage 1624 
+Beginning to crawl webpage 1624 
+Finished with webpage 1625 
+Beginning to crawl webpage 1625 
+Finished with webpage 1626 
+Beginning to crawl webpage 1626 
+Finished with webpage 1627 
+Beginning to crawl webpage 1627 
+Finished with webpage 1628 
+Beginning to crawl webpage 1628 
+Finished with webpage 1629 
+Beginning to crawl webpage 1629 
+Finished with webpage 1630 
+Beginning to crawl webpage 1630 
+Finished with webpage 1631 
+Beginning to crawl webpage 1631 
+Finished with webpage 1632 
+Beginning to crawl webpage 1632 
+Finished with webpage 1633 
+Beginning to crawl webpage 1633 
+Finished with webpage 1634 
+Beginning to crawl webpage 1634 
+Finished with webpage 1635 
+Beginning to crawl webpage 1635 
+Finished with webpage 1636 
+Beginning to crawl webpage 1636 
+Finished with webpage 1637 
+Beginning to crawl webpage 1637 
+Finished with webpage 1638 
+Beginning to crawl webpage 1638 
+Finished with webpage 1639 
+Beginning to crawl webpage 1639 
+Finished with webpage 1640 
+Beginning to crawl webpage 1640 
+Finished with webpage 1641 
+Beginning to crawl webpage 1641 
+Finished with webpage 1642 
+Beginning to crawl webpage 1642 
+Finished with webpage 1643 
+Beginning to crawl webpage 1643 
+Finished with webpage 1644 
+Beginning to crawl webpage 1644 
+Finished with webpage 1645 
+Beginning to crawl webpage 1645 
+Finished with webpage 1646 
+Beginning to crawl webpage 1646 
+Finished with webpage 1647 
+Beginning to crawl webpage 1647 
+Finished with webpage 1648 
+Beginning to crawl webpage 1648 
+Finished with webpage 1649 
+Beginning to crawl webpage 1649 
+Finished with webpage 1650 
+Beginning to crawl webpage 1650 
+Finished with webpage 1651 
+Beginning to crawl webpage 1651 
+Finished with webpage 1652 
+Beginning to crawl webpage 1652 
+Finished with webpage 1653 
+Beginning to crawl webpage 1653 
+Finished with webpage 1654 
+Beginning to crawl webpage 1654 
+Finished with webpage 1655 
+Beginning to crawl webpage 1655 
+Finished with webpage 1656 
+Beginning to crawl webpage 1656 
+Finished with webpage 1657 
+Beginning to crawl webpage 1657 
+Finished with webpage 1658 
+Beginning to crawl webpage 1658 
+Finished with webpage 1659 
+Beginning to crawl webpage 1659 
+Finished with webpage 1660 
+Beginning to crawl webpage 1660 
+Finished with webpage 1661 
+Beginning to crawl webpage 1661 
+Finished with webpage 1662 
+Beginning to crawl webpage 1662 
+Page html for url http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Pascal%27s_calculator.html could not be extracted. 
+Beginning to crawl webpage 1662 
+Finished with webpage 1663 
+Beginning to crawl webpage 1663 
+Finished with webpage 1664 
+Beginning to crawl webpage 1664 
+Finished with webpage 1665 
+Beginning to crawl webpage 1665 
+Finished with webpage 1666 
+Beginning to crawl webpage 1666 
+Finished with webpage 1667 
+Beginning to crawl webpage 1667 
+Finished with webpage 1668 
+Beginning to crawl webpage 1668 
+Finished with webpage 1669 
+Beginning to crawl webpage 1669 
+Finished with webpage 1670 
+Beginning to crawl webpage 1670 
+Finished with webpage 1671 
+Beginning to crawl webpage 1671 
+Finished with webpage 1672 
+Beginning to crawl webpage 1672 
+Finished with webpage 1673 
+Beginning to crawl webpage 1673 
+Finished with webpage 1674 
+Beginning to crawl webpage 1674 
+Finished with webpage 1675 
+
+# test 9: test crawler with large depth
+echo "Testing crawler with larger depth: 6, 7, 8, 9, 10"
+Testing crawler with larger depth: 6, 7, 8, 9, 10
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test9 6
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test9 7
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test9 8
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test9 9
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html test9 10
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 0 
+Finished with webpage 1 
+Beginning to crawl webpage 1 
+Finished with webpage 2 
+Beginning to crawl webpage 2 
+Finished with webpage 3 
+Beginning to crawl webpage 3 
+Finished with webpage 4 
+Beginning to crawl webpage 4 
+Finished with webpage 5 
+Beginning to crawl webpage 5 
+Finished with webpage 6 
+Beginning to crawl webpage 6 
+Finished with webpage 7 
+Beginning to crawl webpage 7 
+Finished with webpage 8 
+Beginning to crawl webpage 8 
+Finished with webpage 9 
