@@ -51,6 +51,6 @@ To compile, simply `make crawler.o`.
 
 ### Testing
 
-The `testing.sh` program tests various forms of incorrect command line arguments ot ensure command-line parsing and validation of those parameters works correctly. It also crawls simple sets of pages, at various depths and with various seed pages.
+The `testing.sh` program tests various forms of incorrect command line arguments to ensure command-line parsing and validation of those parameters works correctly. It also crawls simple sets of pages, at various depths and with various seed pages.
 
 `testing.sh` also explores the Wikipedia playground at smaller depths, and it tests playgrounds at greater depths. The output is saved in testing.out. 

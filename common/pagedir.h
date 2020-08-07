@@ -20,6 +20,15 @@
 */
 bool check_directory(const char* directory);
 
+/************** isCrawlerDirectory ***************/
+/*
+* Returns a boolean dependent on if a passed directory is a crawler-made directory or not
+* If the file ".crawler" is in the directory and openable and writable, return true
+* If it is not, return false
+* isCrawlerDirectory takes a pointer to a directory
+*/
+bool isCrawlerDirectory(const char* pageDirectory);
+
 /************** pagesaver ************/
 /*
 * Saves an output text file for the webpage passed into it. Will print the url on the first line of the file,

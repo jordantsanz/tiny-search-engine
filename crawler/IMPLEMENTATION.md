@@ -24,7 +24,7 @@ void input_delete(void* item);
 void null_delete(void* item);
 ```
 
-Following is a description of the pseudocode in `crawler`, in order by function, with an the interface of each described and any error handling described as well.
+Following is a description of the pseudocode in `crawler`, in order by function, with the interface of each described and any error handling described as well.
 
 ### Functions
 

@@ -16,7 +16,7 @@
 
 bool check_directory(const char* directory)
 {
-    char* pathName = count_malloc(sizeof(directory) + (sizeof(char) * 9 + 1));
+    char* pathName = count_malloc(strlen(directory) + 10);
     strcpy(pathName, directory); 
     strcat(pathName, "/.crawler");
 
@@ -41,7 +41,7 @@ bool pagesaver(webpage_t *page, const char* pageDirectory, int currentCount)
     // write new file
     FILE *fp;
     char * str = (char*) count_malloc(sizeof(char) * 10);
-    char* filename = (char*) count_malloc(sizeof(pageDirectory) + 1 + sizeof(str));
+    char* filename = (char*) count_malloc(strlen(pageDirectory) + sizeof(str));
     strcpy(filename, pageDirectory);
     strcat(filename, "/");
     sprintf(str, "%d", currentCount);
@@ -60,5 +60,22 @@ bool pagesaver(webpage_t *page, const char* pageDirectory, int currentCount)
 
     count_free(filename);
     count_free(str);
+    return true;
+}
+
+bool isCrawlerDirectory(const char* pageDirectory)
+{
+    char* filename = count_malloc(strlen(pageDirectory) + 10);
+    strcpy(filename, pageDirectory); 
+    strcat(filename, "/.crawler");
+
+    FILE* fp;
+    if ((fp = fopen(filename, "w")) == NULL) {
+        printf("Not a crawler directory. Error. \n");
+        return false;
+    }
+    fclose(fp);
+    free(filename);
+
     return true;
 }

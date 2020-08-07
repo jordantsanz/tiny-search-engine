@@ -1,0 +1,308 @@
+switchml () {  typeset swfound=1;
+ if [ "${MODULES_USE_COMPAT_VERSION:-0}" = '1' ]; then
+ typeset swname='main';
+ if [ -e /usr/share/Modules/libexec/modulecmd.tcl ]; then
+ typeset swfound=0;
+ unset MODULES_USE_COMPAT_VERSION;
+ fi;
+ else
+ typeset swname='compatibility';
+ if [ -e /usr/share/Modules/libexec/modulecmd-compat ]; then
+ typeset swfound=0;
+ MODULES_USE_COMPAT_VERSION=1;
+ export MODULES_USE_COMPAT_VERSION;
+ fi;
+ fi;
+ if [ $swfound -eq 0 ]; then
+ echo "Switching to Modules $swname version";
+ source /usr/share/Modules/init/bash;
+ else
+ echo "Cannot switch to Modules $swname version, command not found";
+ return 1;
+ fi
+}
+module () {  unset _mlshdbg;
+ if [ "${MODULES_SILENT_SHELL_DEBUG:-0}" = '1' ]; then
+ case "$-" in 
+ *v*x*)
+ set +vx;
+ _mlshdbg='vx'
+ ;;
+ *v*)
+ set +v;
+ _mlshdbg='v'
+ ;;
+ *x*)
+ set +x;
+ _mlshdbg='x'
+ ;;
+ *)
+ _mlshdbg=''
+ ;;
+ esac;
+ fi;
+ unset _mlre _mlIFS;
+ if [ -n "${IFS+x}" ]; then
+ _mlIFS=$IFS;
+ fi;
+ IFS=' ';
+ for _mlv in ${MODULES_RUN_QUARANTINE:-};
+ do
+ if [ "${_mlv}" = "${_mlv##*[!A-Za-z0-9_]}" -a "${_mlv}" = "${_mlv#[0-9]}" ]; then
+ if [ -n "`eval 'echo ${'$_mlv'+x}'`" ]; then
+ _mlre="${_mlre:-}${_mlv}_modquar='`eval 'echo ${'$_mlv'}'`' ";
+ fi;
+ _mlrv="MODULES_RUNENV_${_mlv}";
+ _mlre="${_mlre:-}${_mlv}='`eval 'echo ${'$_mlrv':-}'`' ";
+ fi;
+ done;
+ if [ -n "${_mlre:-}" ]; then
+ eval `eval ${_mlre}/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash '"$@"'`;
+ else
+ eval `/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash "$@"`;
+ fi;
+ _mlstatus=$?;
+ if [ -n "${_mlIFS+x}" ]; then
+ IFS=$_mlIFS;
+ else
+ unset IFS;
+ fi;
+ unset _mlre _mlv _mlrv _mlIFS;
+ if [ -n "${_mlshdbg:-}" ]; then
+ set -$_mlshdbg;
+ fi;
+ unset _mlshdbg;
+ return $_mlstatus
+}
+#!/bin/bash
+#
+# testing.sh - test file for indexer.c
+# 
+#
+#
+# Jordan Sanz
+# CS50, 2020
+
+# set-up: make testing directories
+
+mkdir ../data
+mkdir: cannot create directory ‘../data’: File exists
+mkdir ../data/test1
+mkdir: cannot create directory ‘../data/test1’: File exists
+mkdir ../data/test2
+mkdir: cannot create directory ‘../data/test2’: File exists
+mkdir ../data/test3
+mkdir: cannot create directory ‘../data/test3’: File exists
+mkdir ../data/test8
+mkdir: cannot create directory ‘../data/test8’: File exists
+mkdir ../data/test9
+mkdir: cannot create directory ‘../data/test9’: File exists
+mkdir ../data/notCrawlerDirectory
+mkdir: cannot create directory ‘../data/notCrawlerDirectory’: File exists
+mkdir ..data/indexFiles
+mkdir: cannot create directory ‘..data/indexFiles’: No such file or directory
+
+../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html ../data/test1 0
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html ../data/test2 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html ../data/test3 2
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+Beginning to crawl webpage 3 
+Finished with webpage 3 
+../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html ../data/test8 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+Beginning to crawl webpage 3 
+Finished with webpage 3 
+Beginning to crawl webpage 4 
+Finished with webpage 4 
+Beginning to crawl webpage 5 
+Finished with webpage 5 
+Beginning to crawl webpage 6 
+Finished with webpage 6 
+Beginning to crawl webpage 7 
+Finished with webpage 7 
+../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html ../data/test9 10
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+Beginning to crawl webpage 3 
+Finished with webpage 3 
+Beginning to crawl webpage 4 
+Finished with webpage 4 
+Beginning to crawl webpage 5 
+Finished with webpage 5 
+Beginning to crawl webpage 6 
+Finished with webpage 6 
+Beginning to crawl webpage 7 
+Finished with webpage 7 
+Beginning to crawl webpage 8 
+Finished with webpage 8 
+Beginning to crawl webpage 9 
+Finished with webpage 9 
+
+# test 0: incorrect command line arguments
+echo "Testing incorrect amount of line arguments"
+Testing incorrect amount of line arguments
+./indexer
+Incorrect number of arguments. 
+./indexer one
+Incorrect number of arguments. 
+./indexer one two three
+Incorrect number of arguments. 
+
+# test 1: directory is non existant
+echo "Testing when directory is non-existant"
+Testing when directory is non-existant
+./indexer notReal ../data/indexFiles/indexFilename
+Not a crawler directory. Error. 
+Directory is not a crawler directory. 
+
+# test 2: testing when directory is not a crawler directory
+echo "Testing when directory is not a crawler directory"
+Testing when directory is not a crawler directory
+./indexer notCrawlerDirectory ../data/indexFiles/indexFilename
+Not a crawler directory. Error. 
+Directory is not a crawler directory. 
+
+# test 3: testing on small set of webpage output
+echo "Testing on a small set of crawler webpage output"
+Testing on a small set of crawler webpage output
+./indexer ../data/test1 ../data/indexFiles/test1File
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
+./indexer ../data/test2 ../data/indexFiles/test2File
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
+./indexer ../data/test3 ../data/indexFiles/test3File
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
+
+# test 4: indextest incorrect commandline arguments
+echo "Indextest has incorrect number of commandline arguments"
+Indextest has incorrect number of commandline arguments
+./indextest
+Wrong number of arguments. Terminate 
+./indextest one
+Wrong number of arguments. Terminate 
+./indextest one two three
+Wrong number of arguments. Terminate 
+
+# test 5: indextest first file is not a file
+echo "Indextest first parameter is not a file"
+Indextest first parameter is not a file
+./indextest notAfile newFile
+Old index file unable to be opened. 
+
+# test 6: indextest on a small set of webpage output
+echo "Indextest tested on a small set of indexer output with diff command to check"
+Indextest tested on a small set of indexer output with diff command to check
+./indextest ../data/indexFiles/test1File ../data/indexFiles/test1FileCopy
+Arguments checked successfully. Moving to index copying. 
+Going to load. 
+Index loaded successfully. 
+Index saved. 
+
+echo "Running diff:"
+Running diff:
+diff -q ../data/indexFiles/test1File ../data/indexFiles/test1FileCopy
+Files ../data/indexFiles/test1File and ../data/indexFiles/test1FileCopy differ
+
+./indextest ../data/indexFiles/test2File ../data/indexFiles/test2FileCopy
+Arguments checked successfully. Moving to index copying. 
+Going to load. 
+Index loaded successfully. 
+Index saved. 
+diff -q ../data/indexFiles/test2File ../data/indexFiles/test2FileCopy
+Files ../data/indexFiles/test2File and ../data/indexFiles/test2FileCopy differ
+
+./indextest ../data/indexFiles/test3File ../data/indexFiles/test3FileCopy
+Arguments checked successfully. Moving to index copying. 
+Going to load. 
+Index loaded successfully. 
+Index saved. 
+diff -q ../data/indexFiles/test3File ../data/indexFiles/test3FileCopy
+Files ../data/indexFiles/test3File and ../data/indexFiles/test3FileCopy differ
+
+# test 7: indexer on larger set of webpage output
+echo "Testing indexer on larger output"
+Testing indexer on larger output
+
+./indexer ../data/test8 ../data/indexFiles/test8
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
+./indexer ../data/test9 ../data/indexFiles/test9
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
+
+# test 8: indextest on larger set of webpage output
+echo "Testing indextest on larger output"
+Testing indextest on larger output
+
+./indextest ../data/indexFiles/test8 ../data/indexFiles/test8Copy
+Arguments checked successfully. Moving to index copying. 
+Going to load. 
+Index loaded successfully. 
+Index saved. 
+./indextest ../data/indexFiles/test9 ../data/indexFiles/test9Copy
+Arguments checked successfully. Moving to index copying. 
+Going to load. 
+Index loaded successfully. 
+Index saved. 
+
+
+echo "Testing completed."
+Testing completed.

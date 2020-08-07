@@ -1,2 +1,7 @@
 common.a
 pagedir.o
+index.o
+word.o
+word
+index
+pagedir
