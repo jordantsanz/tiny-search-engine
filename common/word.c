@@ -15,6 +15,9 @@
 char* normalizeWord(char* word)
 {
     for (int i = 0; i < strlen(word); i++) {
+        if(!isalpha(word[i])){
+            return NULL;
+        }
         word[i] = tolower(word[i]);
     }
 

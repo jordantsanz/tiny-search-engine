@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "../libcs50/webpage.h"
+#include "../libcs50/memory.h"
 
 /************* check_directory ***********/
 /*

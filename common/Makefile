@@ -14,7 +14,7 @@ all: $(LIBS)
 $(LIBS): $(OBJS)
 	ar cr $(LIBS) $(OBJS)
 
-pagedir.o: pagedir.h
+pagedir.o: ../libcs50/memory.h ../libcs50/webpage.h pagedir.h 
 index.o: index.h
 word.o: word.h
 
