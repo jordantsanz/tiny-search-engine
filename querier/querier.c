@@ -12,18 +12,6 @@
 * CS50, Summer 2020
 */
 
-
-/*
-* Exit codes:
-* 1: wrong amount of arguments
-* 2: pageDirectory not a crawler directory
-* 3: indexFile not readable
-* 4: 
-* 5:
-* 6: incorrect word in query
-*
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,10 +105,8 @@ int main(const int argc, const char* argv[])
 ***************************************************************/
 int querier(const char* pageDirectory, const char* indexFilename)
 {
-    // initialize index based on number of lines in file and load
-    //index_t* index = index_load(indexFilename);
 
-    printf("Loaded. Please enter your search query: \n");
+    printf("Program successfully loaded. \n");
 
     char* str;
     printf("Query? \n");
@@ -130,7 +116,10 @@ int querier(const char* pageDirectory, const char* indexFilename)
         parseQuery(str, indexFilename, pageDirectory);
         free(str);
 
-    printf("Query? \n");
+        printf("-------------------------\n");
+        printf("\n");
+
+        printf("Query? \n");
 
     }
     
@@ -147,12 +136,17 @@ int parseQuery(char* str, const char* indexFilename, const char* pageDirectory) 
     // counter
     counters_t* orseq = counters_new();
 
+    if (orseq == NULL){
+        printf("Cannot allocate memory for counter. \n");
+        return 4;
+    }
+
     // index loaded-in
     index_t* indexModule = index_load(indexFilename);
 
     if(indexModule == NULL){
         printf("Cannot load index from filename. \n");
-        return 9;
+        return 4;
     }
 
     // list of words in query
@@ -163,8 +157,8 @@ int parseQuery(char* str, const char* indexFilename, const char* pageDirectory) 
     int indicesInList = separateQuery(str, words);
 
     // no words entered in query
-    if (words[0] == NULL) {
-        printf("No words found. \n");
+    if (indicesInList == -1 || words[0] == NULL) {
+        printf("No words found. Please make sure you are entering in words that are strings of letters. \n");
         free(words);
         index_delete(indexModule, ct_delete);
         counters_delete(orseq);
@@ -176,7 +170,7 @@ int parseQuery(char* str, const char* indexFilename, const char* pageDirectory) 
         free(words);
         index_delete(indexModule, ct_delete);
         counters_delete(orseq);
-        return 6;
+        return 4;
     }
 
     // calculate the scoring of the query
@@ -184,7 +178,7 @@ int parseQuery(char* str, const char* indexFilename, const char* pageDirectory) 
         free(words);
         index_delete(indexModule, ct_delete);
         counters_delete(orseq);
-        return 7;
+        return 4;
     }
 
     orderResults(orseq, pageDirectory);
@@ -204,6 +198,11 @@ int parseQuery(char* str, const char* indexFilename, const char* pageDirectory) 
 *********************************************************/
 int separateQuery(char* str, char** words)
 {
+    // if no query given
+    if(strlen(str) == 0){
+        return -1;
+    }
+
     // front and back indices
     int index1 = 0;
     int index2;
@@ -211,6 +210,11 @@ int separateQuery(char* str, char** words)
     // cover any beginning spaces
     while (isspace(str[index1])){
         index1++;
+    }
+
+    // if end pointer, then only spaces given
+    if (str[index1] == '\0'){
+        return -1;
     }
     
     index2 = index1; // like setting them both to 0 basically
@@ -222,20 +226,23 @@ int separateQuery(char* str, char** words)
     }
     endval++; // now on very last place for string
 
+    // if trailing spaces, make a new endpointer
+    if (isspace(str[endval])){
+        str[endval] = '\0';
+    }
 
-    int wordPositionInList = 0;
+    int wordPositionInList = -1;
 
     // while index2 isn't at end of query
     while(index2 != endval){
 
-        // if index2 reaces end of query somehow, get out!
+        // if index2 reaches end of query somehow, get out!
         if(str[index2] == '\0'){
             break;
         }
 
         // if index2 is not on a space, move it forward and continue to next character
         if(!isspace(str[index2])) {
-            printf("%c \n", str[index2]);
             index2 += 1;
             continue;
         }
@@ -267,23 +274,31 @@ int separateQuery(char* str, char** words)
         if(index1 < index2 && isalpha(str[index1]) && isspace(str[index2])) {
             str[index2] = '\0';
 
+            // only if everything in there is a word
+            wordPositionInList += 1;
             words[wordPositionInList] = &str[index1];
 
-            wordPositionInList += 1;
 
             while (index1 != index2) {
                 index1 += 1;
             }
 
             if (index2 != strlen(str) - 1){ // if not at end of query
+
                 index2 += 1; // move index2 off of null
                 index1 += 1; // move index1 off of null
             }
         }
     }
 
+    // spaces before start of last word
+    while(isspace(str[index1])){
+        index1 += 1;
+    }
+
     // if there's still letters left, grab last word
-    if (isalpha(str[index1])) {
+    if (isalpha(str[index1])) { 
+        wordPositionInList += 1;
         words[wordPositionInList] = &str[index1];
     }
 
@@ -317,14 +332,12 @@ bool printCleanedQuery(char** words, int indicesInList)
 
             // if and
             if (strcmp(and, word) == 0){
-                printf("%s \n", word);
                 printf("Word cannot be and at start or end of list. \n");
                 return false;
             } 
 
             // if or
             if (strcmp(or, word) == 0) {
-                printf("%s \n", word);
                 printf("First and last words in query cannot be 'or.'");
                 return false;
             }
@@ -350,24 +363,36 @@ bool printCleanedQuery(char** words, int indicesInList)
 * Reads through all of the words, returns true if successful, false if not
 **************************************************************************/
 bool calculateQuery(char** words, int indicesInList, index_t* indexModule, counters_t* orseq)
-{
+{   
+    // keeps track of which conjunction we're on
     char* conjunction = NULL;
+
+    // keeps track if there is an extra counter that needs freeing outside of index
     bool madeBlankAnd = false;
 
+    // try to find counter with first word
     counters_t* andseq = index_find(indexModule, words[0]);
 
-    // have to make null counter for andseq if nothing found
+    // have to make blank counter for andseq if nothing found
     if (andseq == NULL) {
         andseq = counters_new();
         madeBlankAnd = true;
+
+        /// memory check
+        if (andseq == NULL){
+            printf("Could not allocate memory for counters. \n");
+            return false;
+        }
     }
 
+    // other counter for merging
     counters_t* counters_2;
 
     // loop through all words 
     for (int index = 1; index <= indicesInList; index++) {
-
-        // is next word a conjunction and?
+ 
+ 
+ ////////// is next word a conjunction and? ////////////
         if (strcmp("and", words[index]) == 0) {
 
             // already have a conjunction
@@ -388,7 +413,7 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
             continue;
         }
 
-        // is next word a conjunction or?
+/////////// is next word a conjunction or? /////////////
         if (strcmp("or", words[index]) == 0) {
 
             // already have a conjunction
@@ -408,7 +433,7 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
             conjunction = "or";
         }
 
-        // if andseq is null, get word and go to next word
+/////////// if andseq is null, get word and go to next word ////////////
         if (andseq == NULL) {
 
             // find new andseq
@@ -416,6 +441,12 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
             if (andseq == NULL){
                 andseq = counters_new();
                 madeBlankAnd = true;
+                
+                // memory check
+                if (andseq == NULL) {
+                    printf("Could not allocate memory for counters. \n");
+                    return false;
+                }
             }
 
             // reset or, because now can be an and
@@ -423,13 +454,20 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
             continue;
         }
 
-        // have and query
+///////////// have and query ////////////
         if (conjunction == NULL || strcmp("and", conjunction) == 0) {
             counters_2 = index_find(indexModule, words[index]);
 
             // if cannot find a word for counters_2, make blank counters, free as well
             if (counters_2 == NULL){
                 counters_2 = counters_new();
+                
+                // memory check
+                if (counters_2 == NULL){
+                    printf("Could not allocate memory for counters. \n");
+                    return false;
+                }
+
                 andQuery(andseq, counters_2);
                 counters_delete(counters_2);
                 conjunction = NULL;
@@ -446,7 +484,7 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
             continue;
         } 
 
-        // have or query
+////////////// have or query //////////////
         if (strcmp("or", conjunction) == 0) {
 
             // perform an or query
@@ -463,18 +501,27 @@ bool calculateQuery(char** words, int indicesInList, index_t* indexModule, count
         }
     }
 
-    // after for loop, merge stuff in 'and' sequence with 'or' sequence
+//////////// after loop, merge stuff in 'and' sequence with 'or' sequence /////////
     if (orseq == NULL){
         printf("No documents found. \n");
         return false;
     }
 
+    // if there isn't anything left to merge
     if(andseq == NULL){
         return true;
     }
 
+    // there is something left to merge: get it merged!
     orQuery(andseq, orseq);
 
+    // cleanup if necessary
+    if(madeBlankAnd){
+        counters_delete(andseq);
+        madeBlankAnd = false;
+    }
+
+    // return successfully
     return true;
 }
 
@@ -526,8 +573,6 @@ void union_helper(void *arg, const int key, const int count)
 
     int sum = count + counters_get(two->result, key);
 
-    printf("sum: %d \n", sum);
-
     counters_set(two->result, key, sum);
 }
 
@@ -550,7 +595,6 @@ bool orderResults(counters_t* orseq, const char* pageDirectory)
     // find how many documents in final counter
     int documentCount = 0;
     counters_iterate(orseq, &documentCount, countDocumentHelper);
-    counters_print(orseq, stdout);
 
     // check for no documents
     if (documentCount == 0){
@@ -606,7 +650,8 @@ void createDocumentHelper(void *arg, const int key, const int count)
 
     // create document
     documentResult_t* document;
-    document = malloc(sizeof(documentResult_t*));
+    document = assertp(malloc(sizeof(documentResult_t*)), "Could not allocate memory for documentResult. \n");
+
     document->docID = key;
     document->count = count;
     int i = 0;
@@ -662,13 +707,15 @@ bool printResults(void* arg, const char* pageDirectory, int documentCount)
         return false;
     }
 
-    printf("Matched %d results (ranked): \n", documentCount);
+    printf("Matched %d results (ranked):\n", documentCount);
 
     for (int index = 0; index < documentCount; index++){
         if(results[index]->count != 0){
-        char* url = findURL(results[index]->docID, pageDirectory);
-        printf("Score:    %d DocID:   %d   URL: %s \n ", results[index]->count, results[index]->docID, url);
-        free(url);
+            char* url = findURL(results[index]->docID, pageDirectory);
+            if(url != NULL){
+                printf("Score:    %d DocID:   %d   URL: %s\n ", results[index]->count, results[index]->docID, url);
+                free(url);
+            }
         }
     }
 
@@ -711,4 +758,3 @@ char* findURL(const int docID, const char* pageDirectory)
 
     return url;
 }
-

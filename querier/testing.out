@@ -88,34 +88,638 @@ mkdir ../data/test7
 mkdir: cannot create directory ‘../data/test7’: File exists
 
 ../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/index.html ../data/test1Crawler 1
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+Beginning to crawl webpage 3 
+Finished with webpage 3 
 ../indexer/indexer ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
 
 ../crawler/crawler http://old-www.cs.dartmouth.edu/~cs50/index.html ../data/test7 3
+Parameters verifed: crawling webpages 
+Beginning to crawl webpage 1 
+Finished with webpage 1 
+Beginning to crawl webpage 2 
+Finished with webpage 2 
+Beginning to crawl webpage 3 
+Page html for url http://old-www.cs.dartmouth.edu/~xia/& could not be extracted. 
+Beginning to crawl webpage 4 
+Finished with webpage 4 
 ../indexer/indexer ../data/test7 ../data/indexFiles/test7Index
+Parameters checked successfully. Moving to indexing 
+Creating filename template. 
+Reading documents. 
+Words on page indexed correctly. 
+Words on page indexed correctly. 
+Finished reading files. Now saving index. 
+Saved index. Terminate successfully. 
 
 
 # Test 0: correct number of arguments
 echo "Testing with wrong number of command line arguments"
+Testing with wrong number of command line arguments
 ./querier
+Please only provide two arguments after the program name. 
 ./querier one
+Please only provide two arguments after the program name. 
 ./querier one two three
+Please only provide two arguments after the program name. 
 
 # Test 0 cont.: directory is not crawler directory
 echo "Testing when directory is not crawler directory"
+Testing when directory is not crawler directory
 ./querier notCrawlerDirectory indexFile
+Not a crawler directory. Error. 
+Page directory must be a crawler directory. 
 
 # Test 0 cont.: indexFile is not real file
 echo "Testing when indexFile is not real file"
+Testing when indexFile is not real file
 ./querier test1 notRealFile
+Not a crawler directory. Error. 
+Page directory must be a crawler directory. 
 
 # Test 1: testing non-word queries
 echo "Testing queries that have non-words"
-./querier ../data/test1Crawler ../data/indexFiles/test1Index 1< j0rd@n
-testing.sh: line 35: j0rd@n: No such file or directory
+Testing queries that have non-words
+ echo "j0rd@n"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Please put only letters in each word. No special characters or numbers. 
+-------------------------
 
-./querier ../data/test1Crawler ../data/indexFiles/test1Index 1< cs-50
-testing.sh: line 37: cs-50: No such file or directory
+Query? 
+
+echo "cs-50"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Please put only letters in each word. No special characters or numbers. 
+-------------------------
+
+Query? 
 
 # Test 2: testing conjunctions at start and end of queries
 echo "Testing queries with conjunctions at start or end"
-./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Testing queries with conjunctions at start or end
+echo "and hello"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Word cannot be and at start or end of list. 
+-------------------------
+
+Query? 
+
+echo "or hello"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+First and last words in query cannot be 'or.'-------------------------
+
+Query? 
+
+echo "hello and" |./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Word cannot be and at start or end of list. 
+-------------------------
+
+Query? 
+
+echo "hello or"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+First and last words in query cannot be 'or.'-------------------------
+
+Query? 
+
+echo "and" ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+and ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+
+# Test 3: testing double conjunctions in the middle of queries
+echo "Testing queries with conjunctions hack-to-back"
+Testing queries with conjunctions hack-to-back
+echo "hello and and goodbye" | ./querier ../data/test1Crawler ../data/indexFiles/test1Index 
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello and and goodbye 
+Bad query. Please only put an 'and' in-between two other words that AREN'T 'and' or 'or'. 
+-------------------------
+
+Query? 
+
+echo "hello or or goodbye" | ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello or or goodbye 
+Bad query. Please only put an 'or' in-between two other words that AREN'T 'and' or 'or'. 
+-------------------------
+
+Query? 
+
+echo "hello and or goodbye" |./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello and or goodbye 
+Bad query. Please only put an 'or' in-between two other words that AREN'T 'and' or 'or'. 
+-------------------------
+
+Query? 
+
+echo "hello or and goodbye"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello or and goodbye 
+Bad query. Please only put an 'and' in-between two other words that AREN'T 'and' or 'or'. 
+-------------------------
+
+Query? 
+
+echo "Moving to successful test cases."
+Moving to successful test cases.
+
+# Test 4: testing giving no word query
+echo "Testing queries with no words"
+Testing queries with no words
+echo ""|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+No real words found. Please make sure you are entering in words. 
+-------------------------
+
+Query? 
+
+# Test 4 cont.: testing giving only spaces as query
+echo "Testing giving only spaces as query"
+Testing giving only spaces as query
+echo "    "|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+No real words found. Please make sure you are entering in words. 
+-------------------------
+
+Query? 
+
+# Test 5: testing with words not in the testfiles
+echo "Testing queries with words not in the testfiles"
+Testing queries with words not in the testfiles
+echo "hello"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello 
+No documents found. 
+-------------------------
+
+Query? 
+
+echo "hello goodbye"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: hello goodbye 
+No documents found. 
+-------------------------
+
+Query? 
+
+# Test 6: testing single words in all cases
+echo "Testing single words in all cases"
+Testing single words in all cases
+echo "dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "Dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "DARTMOUTH"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+# Test 7: testing two words both in the index without and with an and in between
+echo "dartmouth spectrum"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth spectrum 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+echo "dartmouth and spectrum"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+
+echo"spectrum and dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+testing.sh: line 87: echospectrum and dartmouth: command not found
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+echo "spectrum dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: spectrum dartmouth 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+
+# Test 8: testing two words both in the index with an or in between
+echo "Testing two words with or conjunction"
+Testing two words with or conjunction
+
+echo "dartmouth or spectrum"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth or spectrum 
+Matched 3 results (ranked):
+Score:    15 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "spectrum or dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: spectrum or dartmouth 
+Matched 3 results (ranked):
+Score:    15 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+# Test 9: testing two words when one is not in index with and, or, and nothing in-between
+echo "Testing with two words when one is not in index"
+Testing with two words when one is not in index
+
+echo "dartmouth notaword"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth notaword 
+No documents found. 
+-------------------------
+
+Query? 
+echo "notaword dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: notaword dartmouth 
+No documents found. 
+-------------------------
+
+Query? 
+
+echo "dartmouth and notaword"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and notaword 
+No documents found. 
+-------------------------
+
+Query? 
+echo "notaword and dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: notaword and dartmouth 
+No documents found. 
+-------------------------
+
+Query? 
+
+echo "dartmouth or notaword"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth or notaword 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "notaword or dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+free(): double free detected in tcache 2
+testing.sh: line 106: 2343942 Done                    echo "notaword or dartmouth"
+     2343943 Aborted                 (core dumped) | ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+
+# Test 10: testing precedence with conjunctions
+echo "Testing precedence with conjunctions"
+Testing precedence with conjunctions
+
+echo "dartmouth and spectrum or canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum or canvas 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    2 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    2 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "dartmouth or spectrum and canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth or spectrum and canvas 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "dartmouth and spectrum and canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum and canvas 
+No documents found. 
+-------------------------
+
+Query? 
+echo "dartmouth or spectrum or canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth or spectrum or canvas 
+Matched 3 results (ranked):
+Score:    15 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    3 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    3 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+# Test 11: testing precedence when cases not found
+echo "Testing precedence when cases not found"
+Testing precedence when cases not found
+
+echo "dartmouth and notaword or canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and notaword or canvas 
+Matched 2 results (ranked):
+Score:    2 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    2 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "notaword and dartmouth or canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+free(): double free detected in tcache 2
+testing.sh: line 120: 2343954 Done                    echo "notaword and dartmouth or canvas"
+     2343955 Aborted                 (core dumped) | ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+echo "notaword or dartmouth and canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+free(): double free detected in tcache 2
+testing.sh: line 121: 2343956 Done                    echo "notaword or dartmouth and canvas"
+     2343957 Aborted                 (core dumped) | ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+echo "notaword and dartmouth and canvas"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: notaword and dartmouth and canvas 
+No documents found. 
+-------------------------
+
+Query? 
+echo "dartmouth and canvas and notaword"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and canvas and notaword 
+No documents found. 
+-------------------------
+
+Query? 
+echo "dartmouth and canvas or notaword"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and canvas or notaword 
+Matched 2 results (ranked):
+Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+# Test 12: testing various inputs
+echo "Now testing on various input strings"
+Now testing on various input strings
+echo "dartmouth and canvas and program or computer documentation or that"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and canvas and program or computer documentation or that 
+Matched 3 results (ranked):
+Score:    4 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    4 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ Score:    1 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+echo "github or professors and hellothisisnotaword and computer or documentation and that"| ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: github or professors and hellothisisnotaword and computer or documentation and that 
+Matched 2 results (ranked):
+Score:    2 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    2 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "that and github or dartmouth professors computer or documentation"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: that and github or dartmouth professors computer or documentation 
+Matched 2 results (ranked):
+Score:    3 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    3 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+# Test 13: testing various inputs with lots of spaces everywhere
+echo "Now testing with various inputs with many spaces"
+Now testing with various inputs with many spaces
+echo "dartmouth       and spectrum" | ./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+echo "      dartmouth and spectrum      "|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+echo "dartmouth  and     spectrum"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth and spectrum 
+Matched 1 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ -------------------------
+
+Query? 
+echo "        dartmouth"|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+echo "dartmouth        "|./querier ../data/test1Crawler ../data/indexFiles/test1Index
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: dartmouth 
+Matched 3 results (ranked):
+Score:    4 DocID:   2   URL: http://old-www.cs.dartmouth.edu/~xia/ 
+ Score:    1 DocID:   1   URL: http://old-www.cs.dartmouth.edu/~cs50/index.html 
+ Score:    1 DocID:   3   URL: http://old-www.cs.dartmouth.edu/~cs50/ 
+ -------------------------
+
+Query? 
+
+./querier ../data/test1Crawler ../data/indexFiles/test1Index <<< EOF
+Parameters validated. Starting querier. 
+Loaded. Please enter your search query: 
+Query? 
+Index loaded successfully. 
+Query found: eof 
+No documents found. 
+-------------------------
+
+Query? 
+echo "All tests successful."
+All tests successful.
